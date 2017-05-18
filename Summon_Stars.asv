@@ -1,0 +1,33 @@
+% Build Stars
+
+
+%% Plot starting orbit
+deg2rad = pi/180;
+r = 10e10;
+Omega = 142.1145*deg2rad;
+omega = 25.5213*deg2rad;
+num_stars = 100;
+theta = linspace(0,2*pi,num_stars);    %creates 1000 equally spaced components from 0 to 2pi
+
+% Transformation matrix C orbit -> ECI
+C(1,:) = [cos(Omega)*cos(omega) - sin(Omega)*sin(omega)*cos(i),...
+        -cos(Omega)*sin(omega) - sin(Omega)*cos(omega)*cos(i),...
+        sin(Omega)*sin(i)];
+C(2,:) = [sin(Omega)*cos(omega) + cos(Omega)*sin(omega)*cos(i),...
+        -sin(Omega)*sin(omega) + cos(Omega)*cos(omega)*cos(i),...
+        -cos(Omega)*sin(i)];
+C(3,:) = [sin(omega)*sin(i),...
+         cos(omega)*sin(i),...
+         cos(i)];
+     
+     % Orbital coordinates to be outputted
+     for i = 1:num_stars
+orbit_x = r*cos(theta(i)); 
+orbit_y = r*sin(theta(i)); 
+orbit_z = zeros(1,length(orbit_x));
+orbit = [orbit_x,orbit_y,orbit_z];
+Star_ECI(i,:) = C*orbit;
+     end
+output = Star_ECI;
+
+%% plot
