@@ -2,16 +2,14 @@
 % Takes in the time since epoch and the current satellite position in ECI
 % outputs a normal vector (1 col) of the magnetic field in ECI frame
 
-%constants
-%function output = getmag(t,r_eci)
-t  = 1;
-deg2rad = pi/180;
-r_eci = [7000000;6100000; 5100000]; %m
-r_hat = r_eci/norm(r_eci);  %normal vector of satellite
+% Test r_eci = [7000000;6100000; 5100000]; %m
+% t  = 1;
+% th_g0 = 175.1465*deg2rad; %greenwhich sidereal time at epoch 
 
-%Julian day = 2452716.5000 [days] 
-%Greenwich sidereal time at 0 hr UT 175.1465 [deg]
-th_g0 = 175.1465*deg2rad; %greenwhich sidereal time at epoch 
+function output = Get_Mag(t,th_g0, r_eci)
+deg2rad = pi/180;
+
+r_hat = r_eci/norm(r_eci);  %normal vector of satellite
 
 deg2rad = pi/180;
 R_earth = 6378*1000;    %m
@@ -31,4 +29,4 @@ m_i = R_earth^3*H0/(norm(r_eci)^3)*3*d'*r_hat*r_hat-d;
 
 output = m_i/norm(m_i); %normalise output
 
-%end
+end

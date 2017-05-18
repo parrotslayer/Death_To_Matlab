@@ -2,7 +2,19 @@
 %outputs the ECEF of the satellite and the estimated ECEF of the satellite
 
 function [output1,output2,output3] = Get_Estimated_ECEF(orbit_params)
-%% Constants
+% clc
+% clear all 
+% close all
+% ephsat(1)= 7162*1000;              %a - semi major axis meters    
+% ephsat(2)=0.0000872;                %e - eccentricity deg
+% ephsat(3)=98.7401;                  %inc - inclination degrees
+% ephsat(4)=142.1145;                 %Omega - degrees
+% ephsat(5)=25.5213;                  %omega - degrees
+% ephsat(6)=283.570800000000;         %Mo - Mean Anomaly
+% ephsat(7)=2457866.50000000;         %Time since epoch
+% orbit_params = ephsat;
+
+% Constants
 % Define variable u = GM, M is mass of earth
 G = 6.67408e-11 ;
 massearth = 5.972e24;
@@ -10,8 +22,18 @@ u = G * massearth;
 rad2deg = 180/pi;
 deg2rad = pi/180;
 
-%% Get Ground Station data
+%% Get GLONASS data
+
 PlotEarthLatLong
+% ground station names and locations
+% gs_names = {'Schyolkovo','Komsomolsk','St.Petersburg'};
+% gs_llh = [55.910087  ,  38.009208   , 150;...
+%     49.0156679, 33.6450451 , 72  ;...
+%     59.9342802,  30.3350986 , 17];
+% 
+% gs_llh = [55.910087  ,  38.009208   , 150;...
+%     -49.0156679, 133.6450451 , 72  ;...
+%     -79.9342802,  30.3350986 , 17];
 
 gs_names = {'Adelaide, South Australia','Hermitage, UK','Cape Caneveral, Florida'};
 gs_llh = [-33.9284989  ,  138.6007456   , 45;...
@@ -23,8 +45,8 @@ for t = 1 : length(gs_llh(:,1))
     plot(gs_llh(t,2),gs_llh(t,1),'MarkerSize',5,'LineWidth',2,'Marker','x','Color','r')
 end
 
-% Date of VE 2002: 20 March 2002 at 19:16 UTC
-julian_date_VE = juliandate(datetime([2002,3,20,19,16,0]))*86400;
+% Northern: Monday, 20 March 2017 at 10:29 UTC
+julian_date17 = juliandate(datetime([2017,3,20,10,29,0]))*86400;
 
 time_epoch = max(orbit_params(:,7)) * 86400;  %in seconds
 time_period = 60 * 60 * 24;  %24 hours
@@ -45,20 +67,21 @@ for k = 1 : num_sat
     % Plot and calculate ECI data starting from the last measured ephemeris
     % Time that has expired until the last measured satellite
 %time since Mean anomaly
-    tafterepoch(k) = time_epoch - orbit_params(k,7)*86400;  %equal to 0
+    tafterepoch(k) = time_epoch - orbit_params(k,7)*86400;
     ECI_sat(:,:,k) = Orbit_to_ECI_and_Simulate(orbit_params(k,1),orbit_params(k,2),orbit_params(k,3),...
         orbit_params(k,4),orbit_params(k,5),orbit_params(k,6),...
         tafterepoch(k),time_period);
 end
 
 %% Get the Range Azimuth Elevation over 24 hours
-global step         %is defined in calling function and set to 100 by default
+global step
+step = 100;  %if we dont want to calculate every second
 
 % Get ECEF coordinates of ALL satellites over 24 hour period
 for t = 1:step:time_period
     current_time = time_epoch + t;    %time since last epoch for time = n
     % Time since the last equinox, for ECEF coordinate calculation
-    tsinceequinox = (current_time - julian_date_VE);
+    tsinceequinox = (current_time - julian_date17);
     % Get the ECEF coordinates of all satellites at this specific time
     for j = 1 : num_sat
         ECEF_sat(:,t,j) = ECI_to_ECEF([ECI_sat(:,t,j);tsinceequinox]);
@@ -179,7 +202,7 @@ for k = 1 : num_gs
         range(k,indexes(k,:));
         azimuth(k,indexes(k,:));
         elevation(k,indexes(k,:))],...
-        julian_date_VE,...
+        julian_date17,...
         gs_llh(k,:));...
 end
 
@@ -202,7 +225,7 @@ for k = 1 : num_gs
     
     %run nlls function given from lecturer
     % output = Orbital parameters: [a,e,i,RAAN,AoP,Mo(at epoch)] m, degrees
-    nlls_orbit(k,:) = nlls_orbit_determ(julian_date_VE,obs,GS_ECEF,posvel_guess,gs_llh(k,:));
+    nlls_orbit(k,:) = nlls_orbit_determ(julian_date17,obs,GS_ECEF,posvel_guess,gs_llh(k,:));
 end
 
 %% Get Estimated ECI Orbit using orbital parameters from NLLS for a useful ground station
@@ -215,6 +238,10 @@ for k = 1:num_gs
     end
 end
 
+% chosen GS is now global
+global chosen_gs
+chosen_gs = gs_num;
+
 a_est = nlls_orbit(gs_num,1);
 e_est = nlls_orbit(gs_num,2);
 i_est = nlls_orbit(gs_num,3);
@@ -222,7 +249,7 @@ Omega_est = nlls_orbit(gs_num,4);
 omega_est = nlls_orbit(gs_num,5);
 M_est = nlls_orbit(gs_num,6);
 
-ff = 0;   %offset to sync estimated and real ECI values (361 good)
+ff = 359.65;   %offset to sync estimated and real ECI values (361 good)
 
 %get estimated eci orbit from NLLS estimation of a single ground station
 ECI_est = Orbit_to_ECI_and_Simulate(a_est,e_est,i_est,Omega_est,omega_est,...
@@ -271,7 +298,7 @@ ylabel('Position (m)')
 for t = 1:step:time_period
     current_time = time_epoch + t;    %time since last epoch for time = n
     % Time since the last equinox, for ECEF coordinate calculation
-    tsinceequinox = (current_time - julian_date_VE);
+    tsinceequinox = (current_time - julian_date17);
     % Get the ECEF coordinates of all satellites at this specific time
     ECEF_est(:,t) = ECI_to_ECEF([ECI_sat(:,t,j);tsinceequinox]);
     % Get ECEF coordinates wrt the chosen ground station
