@@ -7,6 +7,7 @@
 function output = Get_Star_Tracker(Sat_LLH,t_VE,Star_ECI,FOV )
 % get number of stars
 [num_stars, c] = size(Star_ECI);
+visible_stars = 0;
 
 %given star positions, need to convert to ECEF
 Star_ECEF = zeros(num_stars,3);

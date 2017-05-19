@@ -1,7 +1,7 @@
 %% Assignment 2 Q2
 %outputs the ECEF of the satellite and the estimated ECEF of the satellite
 
-function [output1,output2,output3] = Get_Estimated_ECEF(orbit_params)
+function [ECEF_sat_true,ECI_sat_est, ECEF_sat_est,LGCV_sat_est] = Get_Estimated_ECEF(orbit_params)
 % clc
 % clear all 
 % close all
@@ -238,10 +238,6 @@ for k = 1:num_gs
     end
 end
 
-% chosen GS is now global
-global chosen_gs
-chosen_gs = gs_num;
-
 a_est = nlls_orbit(gs_num,1);
 e_est = nlls_orbit(gs_num,2);
 i_est = nlls_orbit(gs_num,3);
@@ -316,8 +312,10 @@ hold on
 plot3(ECI_est(1,:),ECI_est(2,:),ECI_est(3,:),'r.')
 legend('Earth','Real Orbit','Estimated Orbit')
 
-output1 = ECEF_sat;
-output2 = ECEF_est;
-output3 = LGCV_est;     %for attitude determination
+%output variables
+ECEF_sat_true = ECEF_sat;
+ECI_sat_est = ECEF_est;
+ECEF_sat_est = ECEF_est;
+LGCV_sat_est = LGCV_est;     %for attitude determination
 
 end

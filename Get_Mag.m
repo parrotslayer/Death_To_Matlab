@@ -2,7 +2,7 @@
 % Takes in the time since epoch and the current satellite position in ECI
 % outputs a normal vector (1 col) of the magnetic field in ECI frame
 
-% Test r_eci = [7000000;6100000; 5100000]; %m
+% Test r_eci = [7000000;6100000;5100000]; %m
 % t  = 1;
 % th_g0 = 175.1465*deg2rad; %greenwhich sidereal time at epoch 
 
