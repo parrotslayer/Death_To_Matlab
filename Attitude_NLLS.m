@@ -21,9 +21,10 @@ orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
 orbit_params(7)=2457866.50000000;         %Julian Day (Epoch)
 
 % Use code from Assignment 2 to model estimated orbit and real orbit
-[Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est,Sat_LGCV_est] = Get_Estimated_ECEF(orbit_params);
+%[Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est,Sat_LGCV_est] = Get_Estimated_ECEF(orbit_params);
+load('Get_Estimated_ECEF_data')
 
-%% Simulate the Attitude with Noise
+%% Simulate the Attitude
 t = 1:time_period;   %generate times
 omega1 = 0.001;     %freq of pitch
 omega2 = 0.005;     %freq of yaw
@@ -34,9 +35,9 @@ pitch = pi*sin(omega1*t);
 roll =  pi*sin(omega2*t);
 
 % For testing
-plot(t,pitch);
-hold on
-plot(t,roll);
+%plot(t,pitch);
+%hold on
+%plot(t,roll);
 
 %% Get Magnetometer and Star Tracker Readings Over 24h
 
@@ -85,6 +86,7 @@ weight_mag = 0.01;
 
 %*************************************** TEMP ****************************
 num_times = 1;
+%*************************************************************************
 
 %loop for the number of times
 for t = 1:num_times
