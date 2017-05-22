@@ -62,7 +62,7 @@ Mag_ECI = zeros(3,time_period);
 Mag_ECEF = zeros(time_period,3);
 Mag_LGCV = zeros(time_period,3);
 %24 is an arbitrary number of max stars seen
-Star_Constellation_ECI = zeros(24,3,time_period);
+Stars_Pos_ECI = zeros(24,3,time_period);
 
 for t = 1:step:time_period
 % Convert satellite's estimated ECEF position to est LLH
@@ -82,7 +82,7 @@ Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH(1),Sat_LLH(2),Sat_LLH(3),...
 temp = Get_Star_Tracker(Sat_LLH,t_since_equinox,Star_ECI,FOV);
 % Size of matrix changes so this code makes sure the matrix can be added
 [r,c] = size(temp);
-Star_Constellation_ECI(1:r,:,t) = temp; 
+visible_stars(1:r,:,t) = temp; 
 
 end
 

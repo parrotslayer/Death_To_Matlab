@@ -7,7 +7,7 @@
 function output = Get_Star_Tracker(Sat_LLH,t_VE,Star_ECI,FOV )
 % get number of stars
 [num_stars, c] = size(Star_ECI);
-visible_stars = 0;
+visible_stars = [0,0,0];
 
 %given star positions, need to convert to ECEF
 Star_ECEF = zeros(num_stars,3);
@@ -31,7 +31,9 @@ for i = 1:num_stars
         %increment number of seen stars and store LGCV coordinates
         vis = vis + 1;
         %output normalised LGCV vector
-        visible_stars(vis,:) = Star_LGCV/norm(Star_LGCV);
+       testing = transpose(Star_LGCV/norm(Star_LGCV));
+       visible_stars(vis,:) = testing;
+
     end
 end
 output = visible_stars;

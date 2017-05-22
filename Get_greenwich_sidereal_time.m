@@ -1,7 +1,7 @@
 clc;
-clear all;
-% Input Date: April 11,2013.  UT time 20:11:30
-year  = 2003;  month = 3; day   = 18;
+%clear all;
+% Example Input Date: April 11,2013.  UT time 20:11:30
+year  = 2017;  month = 4; day   = 17;
 hour  = 0; min   = 0; sec   = 0;
 UT = hour + min/60 + sec/3600;
 J0 = 367*year - floor(7/4*(year + floor((month+9)/12))) ...
