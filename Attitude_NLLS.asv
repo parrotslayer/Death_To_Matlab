@@ -34,6 +34,7 @@ yaw = 0*t;
 pitch = pi*sin(omega1*t);
 roll =  pi*sin(omega2*t);
 
+Attitude_Real = [yaw;pitch;roll];
 % For testing
 %plot(t,pitch);
 %hold on
@@ -52,7 +53,7 @@ Omega = orbit_params(4);
 omega = orbit_params(5);
 num_stars = 100;
 % Generate constellation of stars in ECI
-Star_ECI = Summon_Stars(r,inc,Omega,omega,num_stars);
+Star_Constellation_ECI = Summon_Stars(r,inc,Omega,omega,num_stars);
 %FOV
 FOV = 90*deg2rad;
 
@@ -61,8 +62,13 @@ Sat_LLH = zeros(time_period,3);
 Mag_ECI = zeros(3,time_period);
 Mag_ECEF = zeros(time_period,3);
 Mag_LGCV = zeros(time_period,3);
+Mag_Body = zeros(time_period,3);
+
 %24 is an arbitrary number of max stars seen
-Stars_Pos_ECI = zeros(24,3,time_period);
+Star_ECI = zeros(24,3,time_period);
+Star_ECEF = zeros(24,3,time_period);
+Star_LGCV = zeros(24,3,time_period);
+Star_Body = zeros(24,3,time_period);
 
 for t = 1:step:time_period
 % Convert satellite's estimated ECEF position to est LLH
@@ -70,21 +76,52 @@ Sat_LLH(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t)
 
 % Get unit vector of magnetometer readings
 Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
+
 % Convert ECI to ECEF
 current_time = time_epoch + t;    %time since last epoch for time = n
 t_since_equinox = current_time - julian_date17;
 Mag_ECEF(t,:) = ECI_to_ECEF([Mag_ECI(:,t); t_since_equinox]);
 
 % Convert ECEF to LGCV wrt Satellite's position
-Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH(1),Sat_LLH(2),Sat_LLH(3),...
+Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH(t,1),Sat_LLH(t,2),Sat_LLH(t,3),...
     Mag_ECEF(t,1), Mag_ECEF(t,1), Mag_ECEF(t,1));  
 
-temp = Get_Star_Tracker(Sat_LLH,t_since_equinox,Star_ECI,FOV);
+% Convert LGCV to Body using real angles
+Mag_Body(t,:) = LGCV_to_Body(Attitude_Real(:,t),Mag_LGCV(t,:));
+
+
+% Get unit vectors from the star trackers
+temp = Get_Star_Tracker(Sat_LLH,t_since_equinox,Star_Constellation_ECI,FOV);
 % Size of matrix changes so this code makes sure the matrix can be added
 [r,c] = size(temp);
-visible_stars(1:r,:,t) = temp; 
+Star_ECI(1:r,:,t) = temp; 
+
+%ECI to ECEF to LGCV to Body with Errors
+for k = 1:r
+    input = [transpose(Star_ECI(r,:,t)); t_since_equinox];
+    %ECI to ECEF
+    Star_ECEF(k,:,t) = ECI_to_ECEF(input);
+    %ECEF to LGCV
+    Star_LGCV(k,:,t) =  ECEF_to_LGCV(Sat_LLH(t,1),Sat_LLH(t,2),Sat_LLH(t,3),...
+                Star_ECEF(k,1,t), Star_ECEF(k,2,t), Star_ECEF(k,3,t));  
+            
+    Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));
+        
+end
 
 end
+
+%% Add Errors to Star Tracker and Magnetometer Body Readings
+sigma_star = 0.00001;
+sigma_mag = 0.001;
+
+sigma_star = 0;
+sigma_mag = 0;
+
+% Apply Errors
+Mag_Body_Errors = normrnd(Mag_Body,sigma_mag);
+Star_Body_Errors = normrnd(Star_Body,sigma_star);
+
 
 %% Apply NLLS to Determine Attitude for each timestep
 % Constants
@@ -92,21 +129,31 @@ tol = 0.01;
 %Weights matrix same size as readings
 weight_star = 1;
 weight_mag = 0.01;
-
 %find number of star readings, includes X,Y,Z
-[num_times, c, num_star_readings] = size(Star_LGCV);
+[r,c,num_times] = size(Star_LGCV);
+Attitude_Est = zeros(num_times,3);
 
 %*************************************** TEMP ****************************
-num_times = 1;
+%num_times = 10001;
 %*************************************************************************
 
 %loop for the number of times
-for t = 1:num_times
+for t = 1:step:num_times
     %init X vector and other variables
     X_vector = [0;0;0];    %yaw, pitch, roll
     delta_x = 10e9;
     itter = 0;
-    weights = 0;
+
+    %clear matricies in case jacobian is a different size
+    clear H
+    clear y_est
+    clear y_meas
+    clear weights
+    clear delta_y0
+    
+    % Get number of star readings for this timestep
+    num_star_readings(t) = length(find(Star_LGCV(:,1,t)));
+
     % Perform NLLS
     while norm(delta_x) > tol
         %build jacobian for magnetometer readings
@@ -116,18 +163,18 @@ for t = 1:num_times
         %build jacobian
         H(3*k-2:3*k,:) = Get_Jacobian_Attitude(X_vector, Mag_LGCV(t,:));
         %organise measurements
-        y_meas(3*k-2:3*k,1) = Mag_Body(t,:);
+        y_meas(3*k-2:3*k,1) = Mag_Body_Errors(t,:);
         %build diagonals of weight matrix
         weights(3*k-2:3*k) = [weight_mag, weight_mag, weight_mag];
         
         %build jacobian for star tracker readings
-        for k = 2:num_star_readings
+        for k = 2:num_star_readings(:,t)
             %calc estimated body frame coordinates using guess attitude
-            y_est(3*k-2:3*k,1) = LGCV_to_Body(X_vector,Star_LGCV(t,:,k));
+            y_est(3*k-2:3*k,1) = LGCV_to_Body(X_vector,Star_LGCV(k,:,t));
             %build jacobian
-            H(3*k-2:3*k,:) = Get_Jacobian_Attitude(X_vector, Star_LGCV(t,:,k));
+            H(3*k-2:3*k,:) = Get_Jacobian_Attitude(X_vector, Star_LGCV(k,:,t));
             %organise measurements
-            y_meas(3*k-2:3*k,1) = Star_Body(t,:,k);
+            y_meas(3*k-2:3*k,1) = Star_Body_Errors(k,:,t);
             %build diagonals of weight matrix
             weights(3*k-2:3*k) = [weight_star, weight_star, weight_star];
         end
@@ -148,15 +195,37 @@ for t = 1:num_times
         end
         
     end     %end tolerance loop for NLLS
-    disp(X_vector)
+    Attitude_Est(t,:) = X_vector;
 end
 
 %% Plots
+close all
+
+% Attitude_Est_Pi(:,2) = mod(Attitude_Est(:,2),2*pi);
+% rip = Attitude_Est_Pi(:, 2) > pi;
+% Attitude_Est_Pi(rip, 2) = Attitude_Est_Pi(rip, 2) - 2*pi;
+
+for t = 1:time_period
+    if abs(Attitude_Est(t,2)) > pi || Attitude_Est(t,2) == 0
+        Attitude_Est_Pi(t,2) = NaN;
+    else
+        Attitude_Est_Pi(t,2) = Attitude_Est(t,2);
+    end
+end
+plot(1:time_period,Attitude_Real(2,:),'b')
+hold on
+plot(1:time_period,Attitude_Est_Pi(:,2),'r.')
+title('Filtered')
+
 figure
-plot(t,pitch,'b')
-hold on
-plot(t,YPR_sun(:,2),'r');
-hold on
-plot(t,YPR_star(:,2),'k');
-title('Pitch vs Time')
-legend('Real Values','Sun Sensor','Star Tracker')
+plot(1:time_period,Attitude_Est(1:time_period,2),'r.')
+title('Unfilted')
+
+% figure
+% plot(t,pitch,'b')
+% hold on
+% plot(t,YPR_sun(:,2),'r');
+% hold on
+% plot(t,YPR_star(:,2),'k');
+% title('Pitch vs Time')
+% legend('Real Values','Sun Sensor','Star Tracker')

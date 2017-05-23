@@ -4,23 +4,33 @@ clc
 clear all
 
 %% Testing Conversion Matrix
-Star_Body(1,:,1) = [-0.0879; 0.5242; -0.6383];    %meas1
-Star_Body(1,:,2) = [-0.3319; 0.3281; 0.2055];     %meas2
-Star_Body(1,:,3) = [0.8465; 0.0540; 0.6485];      %meas3
+deg2rad = pi/180;
+True_Euler = [11*deg2rad; 32*deg2rad; -45*deg2rad];
 
 Star_LGCV(1,:,1) = [0.2; 0.7; -0.4];   %meas 1
 Star_LGCV(1,:,2) = [0.1; 0.3; 0.4];   %meas 1
 Star_LGCV(1,:,3) = [0.7; -0.8; 0.1];   %meas 1
 
+for k = 1:3
+Star_Body(1,:,k) = LGCV_to_Body(True_Euler,Star_LGCV(1,:,k));
+end
+
+% Star_Body(1,:,1) = [-0.0879; 0.5242; -0.6383];    %meas1
+% Star_Body(1,:,2) = [-0.3319; 0.3281; 0.2055];     %meas2
+% Star_Body(1,:,3) = [0.8465; 0.0540; 0.6485];      %meas3
+
+Mag_LGCV(1,:) = [0.2; 0.7; -0.4];   %meas 1
+
+Mag_Body(1,:) = LGCV_to_Body(True_Euler, Mag_LGCV(1,:));
 %magnetometers only take 1 reading
-Mag_Body(1,:) = [-0.0879; 0.5242; -0.6383];      %meas1
+%Mag_Body(1,:) = [-0.0879; 0.5242; -0.6383];      %meas1
+
 %model magnetometer with errors
 Error1 = [0.01, -0.02, 0.04];
 Mag_Body(1,:) = Mag_Body(:,1) + Error1;
-Mag_LGCV(1,:) = [0.2; 0.7; -0.4];   %meas 1
 
-deg2rad = pi/180;
-True_Euler = [11*deg2rad; 32*deg2rad; -45*deg2rad];
+
+
 
 %for testing
 output = LGCV_to_Body(True_Euler,Star_LGCV(1,:,1));
@@ -71,7 +81,7 @@ while norm(delta_x) > tol
     %get delta x
     delta_x = (H'*W*H)\H'*W*delta_y0;
     %add to the X vector
-    X_vector = X_vector + delta_x
+    X_vector = X_vector + delta_x;
     
     %break condition for itterations
     itter = itter + 1;
@@ -80,3 +90,5 @@ while norm(delta_x) > tol
     end
     
 end
+
+X_vector

@@ -16,8 +16,8 @@ Star_LGCV(1,:,3) = [0.7; -0.8; 0.1];   %meas 1
 Mag_Body(1,:) = [-0.0879; 0.5242; -0.6383];      %meas1
 %model magnetometer with errors
 Error1 = [0.01, -0.02, 0.04];
-%Mag_Body(1,:) = Mag_Body(:,1) + Error1;
-%Mag_LGCV(1,:) = [0.2; 0.7; -0.4];   %meas 1
+Mag_Body(1,:) = Mag_Body(:,1) + Error1;
+Mag_LGCV(1,:) = [0.2; 0.7; -0.4];   %meas 1
 
 %t = 2
 Star_Body(2,:,1) = [-0.0879; 0.5242; -0.6383];    %meas1
