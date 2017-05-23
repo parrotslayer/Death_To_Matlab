@@ -40,7 +40,7 @@ Attitude_Real = [yaw;pitch;roll];
 %hold on
 %plot(t,roll);
 
-%% Get Magnetometer and Star Tracker Readings Over 24h
+%% Generate constellation of stars
 
 %Greenwich sidereal time at UT[hours] 205.3166 [deg]
 th_g0 = 205.3166*deg2rad; %greenwhich sidereal time at epoch
@@ -52,11 +52,29 @@ inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
 num_stars = 100;
-% Generate constellation of stars in ECI
-Star_Constellation_ECI = Summon_Stars(r,inc,Omega,omega,num_stars);
-%FOV
 FOV = 90*deg2rad;
 
+% % Generate constellation of stars in ECI
+% Star_Constellation1_ECI = Summon_Stars(r,inc,Omega,omega,num_stars);
+% Star_Constellation2_ECI = Summon_Stars(r,inc+pi/2,Omega,omega,num_stars);
+% Star_Constellation3_ECI = Summon_Stars(r,-(inc+pi/3),Omega,omega,num_stars);
+% % Add together the multiple planes of stars
+% Star_Constellation_ECI = [Star_Constellation1_ECI;Star_Constellation2_ECI;Star_Constellation3_ECI];
+
+% %FOV is 90 degrees
+
+% rvals = 2*rand(num_stars,1)-1;
+% elevation = asin(rvals);
+% azimuth = 2*pi*rand(num_stars,1);
+% [Star_Constellation_ECI(:,1),Star_Constellation_ECI(:,2),Star_Constellation_ECI(:,3)] = sph2cart(azimuth,elevation,r);
+
+%load the contellation of randomly generated stars (use same for comparison)
+load('100_random_stars');
+
+figure
+plot3(Star_Constellation_ECI(:,1),Star_Constellation_ECI(:,2),Star_Constellation_ECI(:,3),'.')
+axis equal
+%% Get LGCV and Body frame coordinates
 %Preallocate for speed
 Sat_LLH = zeros(time_period,3);
 Mag_ECI = zeros(3,time_period);
@@ -134,12 +152,12 @@ weight_mag = 0.01;
 Attitude_Est = zeros(num_times,3);
 
 %*************************************** TEMP ****************************
-%num_times = 10001;
+num_times = 10001;
 %*************************************************************************
 
 %loop for the number of times
-%for t = 1:step:num_times
-    for t = 20601:step:20701
+for t = 1:step:num_times
+%    for t = 7201:step:7301
 
     %init X vector and other variables
     X_vector = [0;0;0];    %yaw, pitch, roll
@@ -207,6 +225,9 @@ close all
 % rip = Attitude_Est_Pi(:, 2) > pi;
 % Attitude_Est_Pi(rip, 2) = Attitude_Est_Pi(rip, 2) - 2*pi;
 
+Attitude_Est_Pi = zeros(num_times,3);
+
+Attitude_Est(Attitude_Est == 0) = NaN;
 for t = 1:time_period
     if abs(Attitude_Est(t,2)) > pi || Attitude_Est(t,2) == 0
         Attitude_Est_Pi(t,2) = NaN;
@@ -214,23 +235,36 @@ for t = 1:time_period
         Attitude_Est_Pi(t,2) = Attitude_Est(t,2);
     end
 end
+
+figure
 plot(1:time_period,Attitude_Real(2,:),'b')
 hold on
 plot(1:time_period,Attitude_Est_Pi(:,2),'r.')
-title('Filtered')
+title('Filtered Pitch')
 
 figure
 subplot(2,1,1)
-plot(1:time_period,Attitude_Est(1:time_period,2),'r.')
-title('Unfilted')
+plot(1:time_period,Attitude_Real(1,:),'b')
+hold on
+plot(1:time_period,Attitude_Est(1:time_period,1),'r.')
+title('Unfilted Roll')
 subplot(2,1,2)
-plot(abs(num_star_readings));
+plot(abs(num_star_readings),'.');
 
-% figure
-% plot(t,pitch,'b')
-% hold on
-% plot(t,YPR_sun(:,2),'r');
-% hold on
-% plot(t,YPR_star(:,2),'k');
-% title('Pitch vs Time')
-% legend('Real Values','Sun Sensor','Star Tracker')
+figure
+subplot(2,1,1)
+plot(1:time_period,Attitude_Real(2,:),'b')
+hold on
+plot(1:time_period,Attitude_Est(1:time_period,2),'r.')
+title('Unfilted Pitch')
+subplot(2,1,2)
+plot(abs(num_star_readings),'.');
+
+figure
+subplot(2,1,1)
+plot(1:time_period,Attitude_Real(3,:),'b')
+hold on
+plot(1:time_period,Attitude_Est(1:time_period,3),'r.')
+title('Unfilted Yaw')
+subplot(2,1,2)
+plot(abs(num_star_readings),'.');
