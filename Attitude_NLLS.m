@@ -3,6 +3,10 @@ clc
 close all
 clear all
 
+% turn off nearly singular matrix warnings
+ID = 'MATLAB:nearlySingularMatrix';
+warning('off',ID);
+
 time_period = 24*60*60; %1day
 global step
 step = 100;         %time step for looping calculations
@@ -31,8 +35,8 @@ omega2 = 0.005;     %freq of yaw
 
 %model pitch and roll as sine waves. yaw is 0
 yaw = 0*t;
-pitch = pi*sin(omega1*t);
-roll =  pi*sin(omega2*t);
+pitch = pi/2*sin(omega1*t);
+roll =  pi/2*sin(omega2*t);
 
 Attitude_Real = [yaw;pitch;roll];
 % For testing
@@ -229,7 +233,7 @@ Attitude_Est_Pi = zeros(num_times,3);
 
 Attitude_Est(Attitude_Est == 0) = NaN;
 for t = 1:time_period
-    if abs(Attitude_Est(t,2)) > pi || Attitude_Est(t,2) == 0
+    if abs(Attitude_Est(t,2)) > pi
         Attitude_Est_Pi(t,2) = NaN;
     else
         Attitude_Est_Pi(t,2) = Attitude_Est(t,2);

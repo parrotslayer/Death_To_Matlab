@@ -1,8 +1,8 @@
 function output = ECEF_to_LGCV(lat_g, long_g, height_g, rx, ry, rz)
 % convert LLH ground station to ECEF geocentric of ground station
 % units in degrees and meters
-% Test = ECEF_to_LGCV(-33,151,52,-4678800,253900,-3474600)
-
+% Test = ECEF_to_LGCV(-33,151,52,-4678800,2593900,-3474600)
+% CONFIRMED
 ECEF_gnd = LLH_to_ECEF_Geocentric(lat_g, long_g ,height_g);
 
 %find the relative ECEF between the object and the ground station
