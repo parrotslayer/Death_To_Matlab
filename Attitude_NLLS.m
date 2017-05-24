@@ -39,10 +39,6 @@ pitch = pi/2*sin(omega1*t);
 roll =  pi/2*sin(omega2*t);
 
 Attitude_Real = [yaw;pitch;roll];
-% For testing
-%plot(t,pitch);
-%hold on
-%plot(t,roll);
 
 %% Generate constellation of stars
 
@@ -60,13 +56,23 @@ FOV = 90*deg2rad;
 
 % Generate the constellation of stars
 %Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
+
 % Or simply load a pre-made constellation
 load('100_random_stars');
 
+%scale down distance of the stars
+scale = 1e3;
+
+% Plot the ECI orbit and the star constellation
+figure
 plot3(Sat_ECI_est(1,:),Sat_ECI_est(2,:),Sat_ECI_est(3,:),'r.')
 hold on
-plot3(Star_Constellation_ECI(:,1),Star_Constellation_ECI(:,2),Star_Constellation_ECI(:,3),'.')
+plot3(Star_Constellation_ECI(:,1)/scale,Star_Constellation_ECI(:,2)/scale,Star_Constellation_ECI(:,3)/scale,'.')
 axis equal
+title('ECI Plot of Orbit (RED) and Scaled Down Stars (BLUE)')
+xlabel('x (m)')
+ylabel('y (m)')
+zlabel('z (m)')
 
 %% Get LGCV and Body frame coordinates
 %Preallocate for speed
@@ -152,7 +158,7 @@ DOP_Pitch = zeros(num_times,1);
 DOP_Yaw = zeros(num_times,1);
 
 %*************************************** TEMP ****************************
-num_times = 10001;
+%num_times = 10001;
 %*************************************************************************
 
 %loop for the number of times
@@ -228,10 +234,14 @@ for t = 1:step:num_times
         
     end     %end tolerance loop for NLLS
     Attitude_Est(t,:) = X_vector;
+    
+    % Remove outliers, angles greater than +/- pi
+    if abs(Attitude_Est(t,2)) > pi || abs(Attitude_Est(t,3)) > pi
+        Attitude_Est(t,:) = NaN;
+    end
 end
 
 %% Generate Plots
-
 % Get rid of zero terms (no data because we skip steps)
 temp = num_star_readings(time_period);
 num_star_readings(num_star_readings == 0) = NaN;
@@ -243,7 +253,7 @@ ax1 = subplot(2,1,1);
 plot(ax1,1:time_period,Attitude_Real(1,:),'b')
 hold on
 plot(ax1,1:time_period,Attitude_Est(1:time_period,1),'r.')
-title(ax1,'Unfilted Roll')
+title(ax1,'Unfilted Yaw')
 xlabel(ax1,'Time (seconds)')
 ylabel(ax1,'Angle (Radians)')
 ax2 = subplot(2,1,2);
@@ -271,7 +281,7 @@ subplot(2,1,1)
 plot(1:time_period,Attitude_Real(3,:),'b')
 hold on
 plot(1:time_period,Attitude_Est(1:time_period,3),'r.')
-title('Unfilted Yaw')
+title('Unfilted Roll')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
@@ -283,12 +293,14 @@ ylabel('Number of Satellites')
 figure
 subplot(4,1,1)
 plot(1:time_period,DOP_Roll)
-title('DOP Roll')
+title('DOP Yaw')
 subplot(4,1,2)
 plot(1:time_period,DOP_Pitch)
 title('DOP Pitch')
 subplot(4,1,3)
 plot(1:time_period,DOP_Yaw)
-title('DOP Yaw')
+title('DOP Roll')
 subplot(4,1,4)
 plot(1:time_period,num_star_readings,'k.');
+title('Number of Visible Satellites')
+xlabel('Time (Seconds)')
