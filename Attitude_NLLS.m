@@ -140,7 +140,7 @@ Star_Body_Errors = normrnd(Star_Body,sigma_star);
 tol = 0.01;
 %Weights matrix same size as readings
 weight_star = 1;
-weight_mag = 0.01;
+weight_mag = 1;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
 
