@@ -23,7 +23,7 @@ deg2rad = pi/180;
 True_Euler = [11*deg2rad; 32*deg2rad; -45*deg2rad];
 
 %for testing
-output = LGCV_to_Body(True_Euler,Star_LGCV(1,:,1));
+output = LGCV_to_Body(True_Euler,Star_LGCV(1,:,1))
 
 %% Apply NLLS
 X_vector = [0;0;0];    %yaw, pitch, roll

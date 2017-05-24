@@ -51,23 +51,33 @@ th_g0 = 205.3166*deg2rad; %greenwhich sidereal time at epoch
 time_epoch = orbit_params(7) * 86400;  %time of epoch in seconds
 
 %constants for generating constellation
-radius = 10e10;      %some big number 
+r = 10e10;      %some big number 
 inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
-num_stars = 200;
+num_stars = 100;
 FOV = 90*deg2rad;
 
-% Generate the constellation of stars
-%Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
-% Or simply load a pre-made constellation
+% % Generate constellation of stars in ECI
+% Star_Constellation1_ECI = Summon_Stars(r,inc,Omega,omega,num_stars);
+% Star_Constellation2_ECI = Summon_Stars(r,inc+pi/2,Omega,omega,num_stars);
+% Star_Constellation3_ECI = Summon_Stars(r,-(inc+pi/3),Omega,omega,num_stars);
+% % Add together the multiple planes of stars
+% Star_Constellation_ECI = [Star_Constellation1_ECI;Star_Constellation2_ECI;Star_Constellation3_ECI];
+
+% %FOV is 90 degrees
+
+% rvals = 2*rand(num_stars,1)-1;
+% elevation = asin(rvals);
+% azimuth = 2*pi*rand(num_stars,1);
+% [Star_Constellation_ECI(:,1),Star_Constellation_ECI(:,2),Star_Constellation_ECI(:,3)] = sph2cart(azimuth,elevation,r);
+
+%load the contellation of randomly generated stars (use same for comparison)
 load('100_random_stars');
 
-plot3(Sat_ECI_est(1,:),Sat_ECI_est(2,:),Sat_ECI_est(3,:),'r.')
-hold on
+figure
 plot3(Star_Constellation_ECI(:,1),Star_Constellation_ECI(:,2),Star_Constellation_ECI(:,3),'.')
 axis equal
-
 %% Get LGCV and Body frame coordinates
 %Preallocate for speed
 Sat_LLH = zeros(time_period,3);
@@ -143,13 +153,7 @@ weight_star = 1;
 weight_mag = 0.01;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
-
-%Preallocate for speed
 Attitude_Est = zeros(num_times,3);
-num_star_readings = zeros(num_times,1);
-DOP_Roll = zeros(num_times,1);
-DOP_Pitch = zeros(num_times,1);
-DOP_Yaw = zeros(num_times,1);
 
 %*************************************** TEMP ****************************
 num_times = 10001;
@@ -188,7 +192,7 @@ for t = 1:step:num_times
         weights(3*k-2:3*k) = [weight_mag, weight_mag, weight_mag];
         
         %build jacobian for star tracker readings
-        for k = 2:num_star_readings(t)
+        for k = 2:num_star_readings(:,t)
             %calc estimated body frame coordinates using guess attitude
             y_est(3*k-2:3*k,1) = LGCV_to_Body(X_vector,Star_LGCV(k,:,t));
             %build jacobian
@@ -208,18 +212,6 @@ for t = 1:step:num_times
         %add to the X vector
         X_vector = X_vector + delta_x;
         
-        % Check Rank of H
-        if rank(H) ~= 3
-            disp('Error, H is not Full Rank at Timestep = ');
-            disp(t);
-        end
-        
-        %Calculate DOP
-        V = inv(H'*H);
-        DOP_Roll(t) = sqrt(V(1,1));
-        DOP_Pitch(t) = sqrt(V(2,2));
-        DOP_Yaw(t) = sqrt(V(3,3));
-        
         %break condition for itterations
         itter = itter + 1;
         if itter > 10
@@ -230,27 +222,45 @@ for t = 1:step:num_times
     Attitude_Est(t,:) = X_vector;
 end
 
-%% Generate Plots
+%% Plots
+close all
+
+% Attitude_Est_Pi(:,2) = mod(Attitude_Est(:,2),2*pi);
+% rip = Attitude_Est_Pi(:, 2) > pi;
+% Attitude_Est_Pi(rip, 2) = Attitude_Est_Pi(rip, 2) - 2*pi;
+
+Attitude_Est_Pi = zeros(num_times,3);
 
 % Get rid of zero terms (no data because we skip steps)
-temp = num_star_readings(time_period);
 num_star_readings(num_star_readings == 0) = NaN;
-num_star_readings(time_period) = temp;
 Attitude_Est(Attitude_Est == 0) = NaN;
+for t = 1:time_period
+    if abs(Attitude_Est(t,2)) > pi
+        Attitude_Est_Pi(t,2) = NaN;
+    else
+        Attitude_Est_Pi(t,2) = Attitude_Est(t,2);
+    end
+end
 
 figure
-ax1 = subplot(2,1,1);
-plot(ax1,1:time_period,Attitude_Real(1,:),'b')
+plot(1:time_period,Attitude_Real(2,:),'b')
 hold on
-plot(ax1,1:time_period,Attitude_Est(1:time_period,1),'r.')
+plot(1:time_period,Attitude_Est_Pi(:,2),'r.')
+title('Filtered Pitch')
+
+figure
+ax1 = subplot(2,1,1)
+plot(1:time_period,Attitude_Real(1,:),'b')
+hold on
+plot(1:time_period,Attitude_Est(1:time_period,1),'r.')
 title(ax1,'Unfilted Roll')
 xlabel(ax1,'Time (seconds)')
 ylabel(ax1,'Angle (Radians)')
-ax2 = subplot(2,1,2);
-plot(ax2,abs(num_star_readings),'k.');
-title(ax2,'Number Visible Satellites')
-xlabel(ax2,'Time (seconds)')
-ylabel(ax2,'Number of Satellites')
+asubplot(2,1,2)
+title('Number Visible Satellites')
+xlabel('Time (seconds)')
+ylabel('Number of Satellites')
+plot(abs(num_star_readings),'k.');
 
 figure
 subplot(2,1,1)
@@ -261,10 +271,10 @@ title('Unfilted Pitch')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
-plot(abs(num_star_readings),'k.');
 title('Number Visible Satellites')
 xlabel('Time (seconds)')
 ylabel('Number of Satellites')
+plot(abs(num_star_readings),'k.');
 
 figure
 subplot(2,1,1)
@@ -275,20 +285,7 @@ title('Unfilted Yaw')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
-plot(abs(num_star_readings),'k.');
 title('Number Visible Satellites')
 xlabel('Time (seconds)')
 ylabel('Number of Satellites')
-
-figure
-subplot(4,1,1)
-plot(1:time_period,DOP_Roll)
-title('DOP Roll')
-subplot(4,1,2)
-plot(1:time_period,DOP_Pitch)
-title('DOP Pitch')
-subplot(4,1,3)
-plot(1:time_period,DOP_Yaw)
-title('DOP Yaw')
-subplot(4,1,4)
-plot(1:time_period,num_star_readings,'k.');
+plot(abs(num_star_readings),'k.');
