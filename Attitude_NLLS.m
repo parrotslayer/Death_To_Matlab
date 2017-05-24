@@ -39,7 +39,7 @@ yaw = 0*t;
 pitch = amplitude_attitude*deg2rad*sin(omega1*t);
 roll =  amplitude_attitude*deg2rad*sin(omega2*t);
 
-Attitude_Real = [yaw;pitch;roll];
+Attitude_Real = [roll;pitch;yaw];
 
 %% Generate constellation of stars
 
@@ -250,7 +250,7 @@ ax1 = subplot(2,1,1);
 plot(ax1,1:time_period,Attitude_Real(1,:),'b')
 hold on
 plot(ax1,1:time_period,Attitude_Est(1:time_period,1),'r.')
-title(ax1,'Unfilted Yaw')
+title(ax1,'Unfilted Roll')
 xlabel(ax1,'Time (seconds)')
 ylabel(ax1,'Angle (Radians)')
 ax2 = subplot(2,1,2);
@@ -278,7 +278,7 @@ subplot(2,1,1)
 plot(1:time_period,Attitude_Real(3,:),'b')
 hold on
 plot(1:time_period,Attitude_Est(1:time_period,3),'r.')
-title('Unfilted Roll')
+title('Unfilted Yaw')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
@@ -290,13 +290,13 @@ ylabel('Number of Satellites')
 figure
 subplot(4,1,1)
 plot(1:time_period,DOP_Roll)
-title('DOP Yaw')
+title('DOP Roll')
 subplot(4,1,2)
 plot(1:time_period,DOP_Pitch)
 title('DOP Pitch')
 subplot(4,1,3)
 plot(1:time_period,DOP_Yaw)
-title('DOP Roll')
+title('DOP Yaw')
 subplot(4,1,4)
 plot(1:time_period,num_star_readings,'k.');
 title('Number of Visible Satellites')

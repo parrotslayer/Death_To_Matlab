@@ -1,13 +1,13 @@
 % Build Body_to_LGCV
-% Takes in [Yaw, Pitch, Roll] [Phi, Th, psi] in radians
+% Takes in [Roll, Pitch, Yaw] [Phi, Th, psi] in radians
 % Takes in LGCV coordinates as a column vector [X,Y,Z]
 % Returns a column vector
 % CONFIRMED
 
 function output = LGCV_to_Body(attitude,LGCV)
-Phi = attitude(1);  %yaw
+Phi = attitude(1);  %actually roll
 th = attitude(2);   %pitch
-psi = attitude(3);  %roll
+psi = attitude(3);  %actually yaw
 
 C(1,:) = [cos(psi)*cos(th), sin(psi)*cos(th), -sin(th)];
 C(2,:) = [(cos(psi)*sin(th)*sin(Phi)-sin(psi)*cos(Phi)),...

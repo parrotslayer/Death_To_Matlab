@@ -1,4 +1,4 @@
-% Takes in the attitude [Yaw, Pitch, Roll] and the 3D LGCV measurement
+% Takes in the attitude [Roll, Pitch, Yaw] and the 3D LGCV measurement
 % and outputs a 3x3 jacobian for this measurement
 
 %CONFIRMED in NLLS_attitude_WORKING
