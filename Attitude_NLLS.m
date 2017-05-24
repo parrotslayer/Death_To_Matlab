@@ -34,9 +34,10 @@ omega1 = 0.001;     %freq of pitch
 omega2 = 0.005;     %freq of yaw
 
 %model pitch and roll as sine waves. yaw is 0
+amplitude_attitude = 10;    %degrees
 yaw = 0*t;
-pitch = pi/2*sin(omega1*t);
-roll =  pi/2*sin(omega2*t);
+pitch = amplitude_attitude*deg2rad*sin(omega1*t);
+roll =  amplitude_attitude*deg2rad*sin(omega2*t);
 
 Attitude_Real = [yaw;pitch;roll];
 
@@ -235,17 +236,13 @@ for t = 1:step:num_times
     end     %end tolerance loop for NLLS
     Attitude_Est(t,:) = X_vector;
     
-    % Remove outliers, angles greater than +/- pi
-    if abs(Attitude_Est(t,2)) > pi || abs(Attitude_Est(t,3)) > pi
-        Attitude_Est(t,:) = NaN;
-    end
 end
 
 %% Generate Plots
 % Get rid of zero terms (no data because we skip steps)
-temp = num_star_readings(time_period);
+%temp = num_star_readings(time_period);
 num_star_readings(num_star_readings == 0) = NaN;
-num_star_readings(time_period) = temp;
+%num_star_readings(time_period) = temp;
 Attitude_Est(Attitude_Est == 0) = NaN;
 
 figure
