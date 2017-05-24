@@ -131,11 +131,11 @@ end
 end
 
 %% Add Errors to Star Tracker and Magnetometer Body Readings
-sigma_star = 0.00001;
-sigma_mag = 0.001;
+sigma_star = 0.01;  %radians
+sigma_mag = 0.1;    %radians
 
-sigma_star = 0;
-sigma_mag = 0;
+% sigma_star = 0;
+% sigma_mag = 0;
 
 % Apply Errors
 Mag_Body_Errors = normrnd(Mag_Body,sigma_mag);
