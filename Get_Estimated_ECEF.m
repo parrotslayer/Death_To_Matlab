@@ -1,7 +1,15 @@
 %% Assignment 2 Q2
 %outputs the ECEF of the satellite and the estimated ECEF of the satellite
 
-function [ECEF_sat_true,ECI_sat_est, ECEF_sat_est,LGCV_sat_est] = Get_Estimated_ECEF(orbit_params)
+orbit_params(1)= 7162*1000;              %a - semi major axis meters    
+orbit_params(2)=0.0000872;                %e - eccentricity deg
+orbit_params(3)=98.7401;                  %inc - inclination degrees
+orbit_params(4)=142.1145;                 %Omega - degrees
+orbit_params(5)=25.5213;                  %omega - degrees
+orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
+orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
+
+%function [ECEF_sat_true,ECI_sat_est, ECEF_sat_est,LGCV_sat_est] = Get_Estimated_ECEF(orbit_params)
 % clc
 % clear all 
 % close all
@@ -13,6 +21,7 @@ function [ECEF_sat_true,ECI_sat_est, ECEF_sat_est,LGCV_sat_est] = Get_Estimated_
 % ephsat(6)=283.570800000000;         %Mo - Mean Anomaly
 % ephsat(7)=2457866.50000000;         %Time since epoch
 % orbit_params = ephsat;
+
 
 % Constants
 % Define variable u = GM, M is mass of earth
@@ -168,14 +177,15 @@ angle_error = gain*1/3600;   %1 arc second error
 
 for t = 1 : time_period
     for k = 1 : num_gs
-%         range(k,t) = RAE_sat(1,t,k); + range_error*(-1 + rand);
-%         azimuth(k,t) = RAE_sat(2,t,k); + angle_error*(-1 + rand);
-%         elevation(k,t) = RAE_sat(3,t,k) + angle_error*(-1 + rand);
+        
+        range(k,t) = RAE_sat(1,t,k); + range_error*(-1 + rand);
+        azimuth(k,t) = RAE_sat(2,t,k); + angle_error*(-1 + rand);
+        elevation(k,t) = RAE_sat(3,t,k) + angle_error*(-1 + rand);
 
 %use gaussian errors
-        range(k,t) = normrnd(RAE_sat(1,t,k), range_error);
-        azimuth(k,t) = normrnd(RAE_sat(2,t,k), angle_error);
-        elevation(k,t) = normrnd(RAE_sat(3,t,k), angle_error);
+%         range(k,t) = normrnd(RAE_sat(1,t,k), range_error);
+%         azimuth(k,t) = normrnd(RAE_sat(2,t,k), angle_error);
+%         elevation(k,t) = normrnd(RAE_sat(3,t,k), angle_error);
     end
 end
 
@@ -318,4 +328,4 @@ ECI_sat_est = ECEF_est;
 ECEF_sat_est = ECEF_est;
 LGCV_sat_est = LGCV_est;     %for attitude determination
 
-end
+%end

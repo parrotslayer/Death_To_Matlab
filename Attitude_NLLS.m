@@ -5,7 +5,7 @@ clear all
 
 % turn off nearly singular matrix warnings
 ID = 'MATLAB:nearlySingularMatrix';
-warning('off',ID);
+%warning('off',ID);
 
 time_period = 24*60*60; %1day
 global step
@@ -53,7 +53,7 @@ inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
 num_stars = 300;
-FOV = 30*deg2rad;
+FOV = 60*deg2rad;
 
 % Generate the constellation of stars
 Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
@@ -108,24 +108,15 @@ Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH(t,1),Sat_LLH(t,2),Sat_LLH(t,3),...
 % Convert LGCV to Body using real angles
 Mag_Body(t,:) = LGCV_to_Body(Attitude_Real(:,t),Mag_LGCV(t,:));
 
-
 % Get unit vectors from the star trackers
-temp = Get_Star_Tracker(Sat_LLH,t_since_equinox,Star_Constellation_ECI,FOV);
+temp = Get_Star_Tracker(Sat_LLH(t,:),t_since_equinox,Star_Constellation_ECI,FOV);
 % Size of matrix changes so this code makes sure the matrix can be added
 [r,c] = size(temp);
-Star_ECI(1:r,:,t) = temp; 
+Star_LGCV(1:r,:,t) = temp; 
 
-%ECI to ECEF to LGCV to Body with Errors
+%LGCV to Body
 for k = 1:r
-    input = [transpose(Star_ECI(r,:,t)); t_since_equinox];
-    %ECI to ECEF
-    Star_ECEF(k,:,t) = ECI_to_ECEF(input);
-    %ECEF to LGCV
-    Star_LGCV(k,:,t) =  ECEF_to_LGCV(Sat_LLH(t,1),Sat_LLH(t,2),Sat_LLH(t,3),...
-                Star_ECEF(k,1,t), Star_ECEF(k,2,t), Star_ECEF(k,3,t));  
-            
-    Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));
-        
+    Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));       
 end
 
 end
