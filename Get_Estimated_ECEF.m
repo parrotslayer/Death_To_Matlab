@@ -1,6 +1,10 @@
 %% Assignment 2 Q2
 %outputs the ECEF of the satellite and the estimated ECEF of the satellite
 
+clc 
+clear all
+close all
+
 orbit_params(1)= 7162*1000;              %a - semi major axis meters    
 orbit_params(2)=0.0000872;                %e - eccentricity deg
 orbit_params(3)=98.7401;                  %inc - inclination degrees
@@ -65,6 +69,7 @@ num_gs = length(gs_llh(:,1));   %number of ground stations
 
 %pre-allocate ECI, ECEF, LGCV, Polar, Time after Epoch arrays filled with NaN
 ECI_sat = NaN(3,time_period,num_sat);
+ECI_sat_vel = NaN(time_period,1,num_sat);
 ECEF_sat = NaN(3,time_period,num_sat);
 LGCV_sat = NaN(3,time_period,num_gs);
 RAE_sat = NaN(3,time_period,num_gs);
@@ -77,14 +82,14 @@ for k = 1 : num_sat
     % Time that has expired until the last measured satellite
 %time since Mean anomaly
     tafterepoch(k) = time_epoch - orbit_params(k,7)*86400;
-    ECI_sat(:,:,k) = Orbit_to_ECI_and_Simulate(orbit_params(k,1),orbit_params(k,2),orbit_params(k,3),...
+    [ECI_sat(:,:,k),ECI_sat_vel(:,:,k)] = Orbit_to_ECI_and_Simulate(orbit_params(k,1),orbit_params(k,2),orbit_params(k,3),...
         orbit_params(k,4),orbit_params(k,5),orbit_params(k,6),...
         tafterepoch(k),time_period);
 end
 
 %% Get the Range Azimuth Elevation over 24 hours
 global step
-step = 100;  %if we dont want to calculate every second
+step = 10;  %if we dont want to calculate every second
 
 % Get ECEF coordinates of ALL satellites over 24 hour period
 for t = 1:step:time_period
@@ -256,10 +261,11 @@ omega_est = nlls_orbit(gs_num,5);
 M_est = nlls_orbit(gs_num,6);
 
 ff = 359.65;   %offset to sync estimated and real ECI values (361 good)
+ff = -(3754-3351);
 
 %get estimated eci orbit from NLLS estimation of a single ground station
 ECI_est = Orbit_to_ECI_and_Simulate(a_est,e_est,i_est,Omega_est,omega_est,...
-    M_est,time2(gs_num)+ff,time_period);
+    M_est,(time2(gs_num)+ff),time_period);
 
 %% error plots
 

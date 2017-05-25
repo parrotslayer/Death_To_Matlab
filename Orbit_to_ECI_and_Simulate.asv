@@ -71,4 +71,5 @@ for k = 1:timeperiod
     % Calculate Velocity at the Time
     velocity(k) = sqrt(mu*(2/r(k) - 1/a));
 end
+disp
 end
