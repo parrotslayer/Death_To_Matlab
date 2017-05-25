@@ -34,12 +34,12 @@ omega1 = 0.001;     %freq of pitch
 omega2 = 0.005;     %freq of yaw
 
 %model pitch and roll as sine waves. yaw is 0
-ampltiude_attitude = 10;    
+amplitude_attitude = 10;    %degrees
 yaw = 0*t;
-pitch = 10*deg2rad*sin(omega1*t);
-roll =  10*deg2rad*sin(omega2*t);
+pitch = amplitude_attitude*deg2rad*sin(omega1*t);
+roll =  amplitude_attitude*deg2rad*sin(omega2*t);
 
-Attitude_Real = [yaw;pitch;roll];
+Attitude_Real = [roll;pitch;yaw];
 
 %% Generate constellation of stars
 
@@ -53,7 +53,7 @@ inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
 num_stars = 200;
-FOV = 90*deg2rad;
+FOV = 60*deg2rad;
 
 % Generate the constellation of stars
 %Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
@@ -131,11 +131,11 @@ end
 end
 
 %% Add Errors to Star Tracker and Magnetometer Body Readings
-sigma_star = 0.00001;
-sigma_mag = 0.001;
+sigma_star = 0.001;      % direction
+sigma_mag = 0.01;        % direction
 
-sigma_star = 0;
-sigma_mag = 0;
+%  sigma_star = 0;
+%  sigma_mag = 0;
 
 % Apply Errors
 Mag_Body_Errors = normrnd(Mag_Body,sigma_mag);
@@ -236,17 +236,13 @@ for t = 1:step:num_times
     end     %end tolerance loop for NLLS
     Attitude_Est(t,:) = X_vector;
     
-    % Remove outliers, angles greater than +/- pi
-    if abs(Attitude_Est(t,2)) > pi || abs(Attitude_Est(t,3)) > pi
-        Attitude_Est(t,:) = NaN;
-    end
 end
 
 %% Generate Plots
 % Get rid of zero terms (no data because we skip steps)
-temp = num_star_readings(time_period);
+%temp = num_star_readings(time_period);
 num_star_readings(num_star_readings == 0) = NaN;
-num_star_readings(time_period) = temp;
+%num_star_readings(time_period) = temp;
 Attitude_Est(Attitude_Est == 0) = NaN;
 
 figure
@@ -254,14 +250,14 @@ ax1 = subplot(2,1,1);
 plot(ax1,1:time_period,Attitude_Real(1,:),'b')
 hold on
 plot(ax1,1:time_period,Attitude_Est(1:time_period,1),'r.')
-title(ax1,'Unfilted Yaw')
+title(ax1,'Unfilted Roll')
 xlabel(ax1,'Time (seconds)')
 ylabel(ax1,'Angle (Radians)')
 ax2 = subplot(2,1,2);
 plot(ax2,abs(num_star_readings),'k.');
-title(ax2,'Number Visible Satellites')
+title(ax2,'Number Visible Stars')
 xlabel(ax2,'Time (seconds)')
-ylabel(ax2,'Number of Satellites')
+ylabel(ax2,'Number of Stars')
 
 figure
 subplot(2,1,1)
@@ -273,35 +269,35 @@ xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
 plot(abs(num_star_readings),'k.');
-title('Number Visible Satellites')
+title('Number Visible Stars')
 xlabel('Time (seconds)')
-ylabel('Number of Satellites')
+ylabel('Number of Stars')
 
 figure
 subplot(2,1,1)
 plot(1:time_period,Attitude_Real(3,:),'b')
 hold on
 plot(1:time_period,Attitude_Est(1:time_period,3),'r.')
-title('Unfilted Roll')
+title('Unfilted Yaw')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
 plot(abs(num_star_readings),'k.');
-title('Number Visible Satellites')
+title('Number Visible Stars')
 xlabel('Time (seconds)')
 ylabel('Number of Satellites')
 
 figure
 subplot(4,1,1)
 plot(1:time_period,DOP_Roll)
-title('DOP Yaw')
+title('DOP Roll')
 subplot(4,1,2)
 plot(1:time_period,DOP_Pitch)
 title('DOP Pitch')
 subplot(4,1,3)
 plot(1:time_period,DOP_Yaw)
-title('DOP Roll')
+title('DOP Yaw')
 subplot(4,1,4)
 plot(1:time_period,num_star_readings,'k.');
-title('Number of Visible Satellites')
+title('Number of Visible Stars')
 xlabel('Time (Seconds)')

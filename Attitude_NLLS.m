@@ -52,14 +52,14 @@ radius = 10e10;      %some big number
 inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
-num_stars = 200;
-FOV = 90*deg2rad;
+num_stars = 300;
+FOV = 30*deg2rad;
 
 % Generate the constellation of stars
-%Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
+Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
 
 % Or simply load a pre-made constellation
-load('100_random_stars');
+%load('100_random_stars');
 
 %scale down distance of the stars
 scale = 1e3;
@@ -131,11 +131,11 @@ end
 end
 
 %% Add Errors to Star Tracker and Magnetometer Body Readings
-sigma_star = 0.01;  %radians
-sigma_mag = 0.1;    %radians
+sigma_star = 0.001;      % direction
+sigma_mag = 0.01;        % direction
 
-% sigma_star = 0;
-% sigma_mag = 0;
+%  sigma_star = 0;
+%  sigma_mag = 0;
 
 % Apply Errors
 Mag_Body_Errors = normrnd(Mag_Body,sigma_mag);
@@ -255,9 +255,9 @@ xlabel(ax1,'Time (seconds)')
 ylabel(ax1,'Angle (Radians)')
 ax2 = subplot(2,1,2);
 plot(ax2,abs(num_star_readings),'k.');
-title(ax2,'Number Visible Satellites')
+title(ax2,'Number Visible Stars')
 xlabel(ax2,'Time (seconds)')
-ylabel(ax2,'Number of Satellites')
+ylabel(ax2,'Number of Stars')
 
 figure
 subplot(2,1,1)
@@ -269,9 +269,9 @@ xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
 plot(abs(num_star_readings),'k.');
-title('Number Visible Satellites')
+title('Number Visible Stars')
 xlabel('Time (seconds)')
-ylabel('Number of Satellites')
+ylabel('Number of Stars')
 
 figure
 subplot(2,1,1)
@@ -283,7 +283,7 @@ xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
 subplot(2,1,2)
 plot(abs(num_star_readings),'k.');
-title('Number Visible Satellites')
+title('Number Visible Stars')
 xlabel('Time (seconds)')
 ylabel('Number of Satellites')
 
@@ -299,5 +299,5 @@ plot(1:time_period,DOP_Yaw)
 title('DOP Yaw')
 subplot(4,1,4)
 plot(1:time_period,num_star_readings,'k.');
-title('Number of Visible Satellites')
+title('Number of Visible Stars')
 xlabel('Time (Seconds)')
