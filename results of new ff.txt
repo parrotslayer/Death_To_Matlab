@@ -1,0 +1,19 @@
+ff = 0
+red = 3351
+blue = 3754
+
+ff = above
+red = 2951
+blue = 3754
+
+>> norm(init_guess(4:6,1))
+
+ans =
+
+   7.4602e+03
+
+>> ECI_sat_vel(time2(1))
+
+ans =
+
+   7.4605e+03

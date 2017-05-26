@@ -277,7 +277,7 @@ error_Omega = Omega_est - orbit_params(4);
 error_omega = omega_est - orbit_params(5);
 error_M = M_est - orbit_params(6);
 
-error = [error_a, error_e, error_i, error_Omega, error_omega, error_M];
+params_error = [error_a, error_e, error_i, error_Omega, error_omega, error_M];
 
 error = NaN(time_period,1);
 toffset = 0;
