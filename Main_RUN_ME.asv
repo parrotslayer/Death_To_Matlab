@@ -170,7 +170,7 @@ weight_mag = 1;
 [r,c,num_times] = size(Star_LGCV);
 
 %Preallocate for speed
-Attitude_Est = zeros(num_times,3);
+Attitude_est = zeros(num_times,3);
 num_star_readings = zeros(num_times,1);
 DOP_Roll = zeros(num_times,1);
 DOP_Pitch = zeros(num_times,1);
@@ -252,7 +252,7 @@ for t = 1:step:num_times
         end
         
     end     %end tolerance loop for NLLS
-    Attitude_Est(t,:) = X_vector;
+    Attitude_est(t,:) = X_vector;
     
     if t == 10001 || t==20001 ||t==30001||t==40001||t==50001||t==60001||t==70001||t==80001
         disp('Attitude Determination Timestep = ')
@@ -266,16 +266,16 @@ sigma_tracking_errors = 100;    %meters
 
 Sat_LLH_true = NaN(time_period,3);
 Nadir_ECEF_true = NaN(time_period,3);
-Feature_RAE_est = NaN(time_period,3);
-Feature_Body_est = NaN(time_period,3);
-Nadir_Body_est = NaN(time_period,3);
-Nadir_LGCV_est = NaN(time_period,3);
 Nadir_ECEF_est = NaN(time_period,3);
+Swath_ECEF_true = NaN(time_period,3);
+Swath_ECEF_est = NaN(time_period,3);
 Nadir_Error = NaN(time_period,3);
 Nadir_Error_Magnitude = NaN(time_period,1);
+Swath_Error = NaN(time_period,3);
+Swath_Error_Magnitude = NaN(time_period,1);
 
 for t = 1:step:time_period
-%% Get True Position of the Nadir Point and Swath Edge
+%% Get True Position of the Nadir Point and North Swath Edge
 % Convert satellite's estimated ECEF position to est LLH
 Sat_LLH_true(t,:) = ECEF_to_LLH(Sat_ECEF_true(1,t),Sat_ECEF_true(2,t),Sat_ECEF_true(3,t));
 
@@ -288,19 +288,27 @@ t_since_equinox = current_time - julian_date17;
 Nadir_ECEF_true(t,:) = ECI_to_ECEF([Feature_ECI_true; t_since_equinox]);
 
 % Convert ECEF to LGCV
+Feature_LGCV_true =  ECEF_to_LGCV(Sat_LLH_true(t,1),Sat_LLH_true(t,2),Sat_LLH_true(t,3),...
+    Nadir_ECEF_true(t,1), Nadir_ECEF_true(t,2), Nadir_ECEF_true(t,3));  
 
 % Convert LGCV to Body
+Feature_Body_true = LGCV_to_Body(Attitude_Real(:,t),Feature_LGCV_true');
 
 % Rotate Body Frame by FOV/2 in the North Direction
 th = FOV/2;
 C_rot = [cos(th) 0 -sin(th);
     0 1 0;
     sin(th) 0 cos(th)];
+Feature_Body_true = C_rot*Feature_Body_true';
+
 % Body to LGCV
+Feature_LGCV_true = Body_to_LGCV(Attitude_Real(:,t),Feature_Body_true');
 
 % LGCV to ECEF
+Swath_ECEF_true(t,3) =  LGCV_to_ECEF(Sat_LLH_true(t,1),Sat_LLH_true(t,2),Sat_LLH_true(t,3),...
+    Feature_LGCV_true(1), Feature_LGCV_true(2), Feature_LGCV_true(3)); 
 
-%% Get Estimated Nadir Point
+%% Get Estimated Nadir Point and North Swath Edge
 % Set magnitude of ECI vector to Radius of the Earth
 Feature_ECI_est = Sat_ECI_est(:,t)*radius_earth/norm(Sat_ECI_est(:,t));
 
@@ -312,21 +320,35 @@ Feature_LGCV_est =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t
     Feature_ECEF_est(1), Feature_ECEF_est(2), Feature_ECEF_est(3));  
 
 % Convert LGCV to Body using estimated angles
-Feature_Body_est = LGCV_to_Body(transpose(Attitude_Est(t,:)),Feature_LGCV_est);
+Feature_Body_est = LGCV_to_Body(transpose(Attitude_est(t,:)),Feature_LGCV_est');
 
 % Add Errors to Body readings
 Nadir_Body_est = normrnd(Feature_Body_est,sigma_tracking_errors);
 
 % Convert Body to LGCV
-Nadir_LGCV_est = Body_to_LGCV(Attitude_Est(t,:),Nadir_Body_est);
+Nadir_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Nadir_Body_est);
 
 % Convert LGCV to ECEF
 Nadir_ECEF_est(t,:) = LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
-    Nadir_LGCV_est, Nadir_LGCV_est, Nadir_LGCV_est);
+    Nadir_LGCV_est(1), Nadir_LGCV_est(2), Nadir_LGCV_est(3));
+
+% Rotate Body Frame by FOV/2 in the North Direction
+Swath_Body_est = C_rot*Feature_Body_est';
+
+% Body to LGCV
+Swath_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Swath_Body_est');
+
+% LGCV to ECEF
+Swath_ECEF_est(t,:) =  LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+    Feature_LGCV_est(1), Feature_LGCV_est(2), Feature_LGCV_est(3)); 
 
 % Calculate Nadir Errors
 Nadir_Error(t,:) = Nadir_ECEF_true(t,:) - Nadir_ECEF_est(t,:);
 Nadir_Error_Magnitude(t) = norm(Nadir_Error(t,:));
+
+% Calculate Swath Errors
+Swath_Error(t,:) = Swath_ECEF_true(t,:) - Swath_ECEF_est(t,:);
+Swath_Error_Magnitude(t) = norm(Swath_Error(t,:));
 end
 
 %% Tracking Plots
@@ -339,7 +361,7 @@ title('X Nadir Est vs Real')
 
 figure
 plot(1:time_period,Nadir_Error_Magnitude,'k.')
-title('Error Magnitude vs Time')
+title('Error Nadir Magnitude vs Time')
 
 figure
 subplot(2,1,1)
@@ -347,20 +369,32 @@ plot(Nadir_Error(:,1),Nadir_Error(:,2),'.');
 title('Nadir Mapping Errors')
 subplot(2,1,2)
 plot(1:time_period,Nadir_Error(:,3),'.')
-title('Down Error')
+title('Nadir Down Error')
+
+figure
+plot(1:time_period,Swath_Error_Magnitude,'k.')
+title('Error Swath Magnitude vs Time')
+
+figure
+subplot(2,1,1)
+plot(Swath_Error(:,1),Swath_Error(:,2),'.');
+title('Swath Mapping Errors')
+subplot(2,1,2)
+plot(1:time_period,Nadir_Error(:,3),'.')
+title('Swath Down Error')
 
 %% Generate Plots of Attitude
 % Get rid of zero terms (no data because we skip steps)
 %temp = num_star_readings(time_period);
 num_star_readings(num_star_readings == 0) = NaN;
 %num_star_readings(time_period) = temp;
-Attitude_Est(Attitude_Est == 0) = NaN;
+Attitude_est(Attitude_est == 0) = NaN;
 
 figure
 ax1 = subplot(2,1,1);
 plot(ax1,1:time_period,Attitude_Real(1,:),'b')
 hold on
-plot(ax1,1:time_period,Attitude_Est(1:time_period,1),'r.')
+plot(ax1,1:time_period,Attitude_est(1:time_period,1),'r.')
 title(ax1,'Unfilted Roll')
 xlabel(ax1,'Time (seconds)')
 ylabel(ax1,'Angle (Radians)')
@@ -374,7 +408,7 @@ figure
 subplot(2,1,1)
 plot(1:time_period,Attitude_Real(2,:),'b')
 hold on
-plot(1:time_period,Attitude_Est(1:time_period,2),'r.')
+plot(1:time_period,Attitude_est(1:time_period,2),'r.')
 title('Unfilted Pitch')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
@@ -388,7 +422,7 @@ figure
 subplot(2,1,1)
 plot(1:time_period,Attitude_Real(3,:),'b')
 hold on
-plot(1:time_period,Attitude_Est(1:time_period,3),'r.')
+plot(1:time_period,Attitude_est(1:time_period,3),'r.')
 title('Unfilted Yaw')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
