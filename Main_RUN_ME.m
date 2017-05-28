@@ -267,19 +267,19 @@ end
 %load('Workspace_28_5_12pm')
 
 % Tracking Errors
-sigma_tracking_range = 1000;    %meters
-sigma_tracking_angle = 1/60*deg2rad;    %radians
-sigma_remote_range = 1000; %meters
-sigma_remote_angle = 1/60*deg2rad;  %radians
+sigma_tracking_errors = 100;    %meters
 
 Sat_LLH_true = zeros(time_period,3);
 Feature_ECI_true = zeros(3,time_period);
-Feature_ECEF_true = zeros(time_period,3);
+Nadir_ECEF_true = zeros(time_period,3);
 Feature_ECI_est = zeros(3,time_period);
 Feature_ECEF_est = zeros(time_period,3);
 Feature_LGCV_est = zeros(time_period,3);
 Feature_RAE_est = zeros(time_period,3);
 Feature_Body_est = zeros(time_period,3);
+Nadir_Body_est = zeros(time_period,3);
+Nadir_LGCV_est = zeros(time_period,3);
+Nadir_ECEF_est = zeros(time_period,3);
 
 for t = 1:step:time_period
 %% Get True Position of the Nadir Point 
@@ -293,7 +293,7 @@ Feature_ECI_true(:,t) = temp;
 % Convert ECI to ECEF
 current_time = time_epoch + t;    %time since last epoch for time = n
 t_since_equinox = current_time - julian_date17;
-Feature_ECEF_true(t,:) = ECI_to_ECEF([Feature_ECI_true(:,t); t_since_equinox]);
+Nadir_ECEF_true(t,:) = ECI_to_ECEF([Feature_ECI_true(:,t); t_since_equinox]);
 
 %% Get Estimated Nadir Point
 % Set magnitude of ECI vector to Radius of the Earth
@@ -307,24 +307,25 @@ Feature_ECEF_est(t,:) = ECI_to_ECEF([Feature_ECI_est(:,t); t_since_equinox]);
 Feature_LGCV_est(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
     Feature_ECEF_est(t,1), Feature_ECEF_est(t,2), Feature_ECEF_est(t,3));  
 
-% Convert LGCV to RAE
-Feature_RAE_est(t,:) = LGCV_to_RAE(Feature_LGCV_est);
-
-% Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-Feature_RAE_est(t,1) = normrnd(Feature_RAE_est(t,1), sigma_tracking_range); 
-Feature_RAE_est(t,2) = normrnd(Feature_RAE_est(t,2), sigma_tracking_angle); 
-Feature_RAE_est(t,3) = normrnd(Feature_RAE_est(t,3), sigma_tracking_angle); 
-
-% Convert RAE with noise back to LGCV
-Feature_LGCV_est(t,:) = RAE_to_LGCV(Feature_RAE_est);
-
 % Convert LGCV to Body using estimated angles
 Feature_Body_est(t,:) = LGCV_to_Body(transpose(Attitude_Est(t,:)),Feature_LGCV_est(t,:));
 
+% Add Errors to Body readings
+Nadir_Body_est(t,:) = normrnd(Feature_Body_est(t,:),sigma_tracking_errors);
+
+% Convert Body to LGCV
+Nadir_LGCV_est(t,:) = Body_to_LGCV(Attitude_Est(t,:),Nadir_Body_est(t,:));
+
+% Convert LGCV to ECEF
+Nadir_ECEF_est(t,:) = LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+    Nadir_LGCV_est(t,1), Nadir_LGCV_est(t,2), Nadir_LGCV_est(t,3));
 
 end
 
-
+figure
+plot(1:time_period,Nadir_ECEF_true(:,1),'b*');
+hold on
+plot(1:time_period,Nadir_ECEF_est(:,1),'r.');
 
 %% Generate Plots of Attitude
 % Get rid of zero terms (no data because we skip steps)

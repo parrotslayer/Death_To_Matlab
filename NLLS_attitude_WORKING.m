@@ -22,6 +22,7 @@ True_Euler = [11*deg2rad; 32*deg2rad; -45*deg2rad];
 %for testing
 output = LGCV_to_Body(True_Euler,Star_LGCV(1,:,1));
 
+lgcv = Body_to_LGCV(True_Euler,Star_Body(1,:,2))
 %% Apply NLLS
 X_vector = [0;0;0];    %yaw, pitch, roll
 tol = 0.0001;

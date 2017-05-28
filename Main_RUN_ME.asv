@@ -29,14 +29,15 @@ orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1
 % Use code from Assignment 2 to model estimated orbit and real orbit
 [Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est] = Orbit_Determination(orbit_params);
 save('Orbit Determination_Data')
+
 %load('Orbit Determination_Data')
 
 
 %% Simulate the Attitude
 step = 100;
 t = 1:time_period;   %generate times
-omega1 = 0.001;     %freq of pitch
-omega2 = 0.005;     %freq of yaw
+omega1 = 0.0005;     %freq of pitch
+omega2 = 0.001;     %freq of yaw
 
 %model pitch and roll as sine waves. yaw is 0
 amplitude_attitude = 10;    %degrees
@@ -63,10 +64,7 @@ FOV = 60*deg2rad;
 % Generate the constellation of stars
 Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
 
-% Or simply load a pre-made constellation
-%load('100_random_stars');
-
-%scale down distance of the stars
+%scale down distance of the stars for plotting
 scale = 1e3;
 
 % Plot the ECI orbit and the star constellation
@@ -81,7 +79,7 @@ ylabel('y (m)')
 zlabel('z (m)')
 
 %% Get LGCV and Body frame coordinates
-
+% Errors
 sigma_star = 0.001;      % direction
 sigma_mag = 0.01;        % direction
 
@@ -90,15 +88,18 @@ Sat_LLH_est = zeros(time_period,3);
 Mag_ECI = zeros(3,time_period);
 Mag_ECEF = zeros(time_period,3);
 Mag_LGCV = zeros(time_period,3);
+Mag_RAE = zeros(time_period,3);
 Mag_Body = zeros(time_period,3);
 
 %24 is an arbitrary number of max stars seen
 Star_ECI = zeros(24,3,time_period);
 Star_ECEF = zeros(24,3,time_period);
 Star_LGCV = zeros(24,3,time_period);
+Star_RAE = zeros(24,3,time_period);
 Star_Body = zeros(24,3,time_period);
 
 for t = 1:step:time_period
+%% Get Magnetometer Body and LGCV Readings with Noise
 % Convert satellite's estimated ECEF position to est LLH
 Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
 
@@ -115,48 +116,49 @@ Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3)
     Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));  
 
 % Convert LGCV to RAE
-Feature_RAE_est(t,:) = LGCV_to_RAE(Feature_LGCV_est);
+Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
 
 % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-Feature_RAE_est(t,1) = normrnd(Feature_RAE_est(t,1), sigma_tracking_range); 
-Feature_RAE_est(t,2) = normrnd(Feature_RAE_est(t,2), sigma_tracking_angle); 
-Feature_RAE_est(t,3) = normrnd(Feature_RAE_est(t,3), sigma_tracking_angle); 
+Mag_RAE(t,1) = Mag_RAE(t,1); 
+Mag_RAE(t,2) = normrnd(Mag_RAE(t,2), sigma_mag); 
+Mag_RAE(t,3) = normrnd(Mag_RAE(t,3), sigma_mag); 
 
 % Convert RAE with noise back to LGCV
-Feature_LGCV_est(t,:) = RAE_to_LGCV(Feature_RAE_est);
+Mag_LGCV(t,:) = RAE_to_LGCV(Mag_RAE);
 
-% Convert LGCV to Body using estimated angles
-Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Est(t,:)),Feature_LGCV_est(t,:));
+% Convert LGCV with noise to Body using Real angles
+Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Real(:,t)),Mag_LGCV(t,:));
 
+%% Get Star Tracker Body and LGCV Readings with Noise
 % Get unit vectors from the star trackers
 temp = Get_Star_Tracker(Sat_LLH_est(t,:),t_since_equinox,Star_Constellation_ECI,FOV);
 % Size of matrix changes so this code makes sure the matrix can be added
 [r,c] = size(temp);
 Star_LGCV(1:r,:,t) = temp; 
 
-%LGCV to Body
 for k = 1:r
-    Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));       
+% Convert LGCV to RAE
+Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
+
+% Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+Star_RAE(k,1,t) = Star_RAE(k,1,t); 
+Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag); 
+Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag); 
+
+% Convert RAE with noise back to LGCV
+Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
+
+% Convert LGCV to Body using Real Attitudes
+Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));     
 end
 
-    if t == 10001 || t==20001 ||t==30001||t==40001||t==50001||t==60001||t==70001||t==80001
-        disp('Frame Conversion Timestep = ')
-        disp(t)
-    end
-
+% Progress Report
+if t == 10001 || t==20001 ||t==30001||t==40001||t==50001||t==60001||t==70001||t==80001
+    disp('Frame Conversion Timestep = ')
+    disp(t)
 end
 
-%% Add Errors to Star Tracker and Magnetometer Body Readings
-sigma_star = 0.001;      % direction
-sigma_mag = 0.01;        % direction
-
-%  sigma_star = 0;
-%  sigma_mag = 0;
-
-% Apply Errors
-Mag_Body_Errors = normrnd(Mag_Body,sigma_mag);
-Star_Body_Errors = normrnd(Star_Body,sigma_star);
-
+end
 
 %% Apply NLLS to Determine Attitude for each timestep
 % Constants
@@ -206,7 +208,7 @@ for t = 1:step:num_times
         %build jacobian
         H(3*k-2:3*k,:) = Get_Jacobian_Attitude(X_vector, Mag_LGCV(t,:));
         %organise measurements
-        y_meas(3*k-2:3*k,1) = Mag_Body_Errors(t,:);
+        y_meas(3*k-2:3*k,1) = Mag_Body(t,:);
         %build diagonals of weight matrix
         weights(3*k-2:3*k) = [weight_mag, weight_mag, weight_mag];
         
@@ -217,7 +219,7 @@ for t = 1:step:num_times
             %build jacobian
             H(3*k-2:3*k,:) = Get_Jacobian_Attitude(X_vector, Star_LGCV(k,:,t));
             %organise measurements
-            y_meas(3*k-2:3*k,1) = Star_Body_Errors(k,:,t);
+            y_meas(3*k-2:3*k,1) = Star_Body(k,:,t);
             %build diagonals of weight matrix
             weights(3*k-2:3*k) = [weight_star, weight_star, weight_star];
         end
@@ -259,16 +261,13 @@ for t = 1:step:num_times
 end
 
 %% Calculate Nadir Point and North/East Swath Edge
-clear all 
-close all
-clc
-load('Workspace_28_5_12pm')
+%clear all 
+%close all
+%clc
+%load('Workspace_28_5_12pm')
 
 % Tracking Errors
-sigma_tracking_range = 1000;    %meters
-sigma_tracking_angle = 1/60*deg2rad;    %radians
-sigma_remote_range = 1000; %meters
-sigma_remote_angle = 1/60*deg2rad;  %radians
+sigma_tracking_errors = 100;    %meters
 
 Sat_LLH_true = zeros(time_period,3);
 Feature_ECI_true = zeros(3,time_period);
@@ -305,20 +304,13 @@ Feature_ECEF_est(t,:) = ECI_to_ECEF([Feature_ECI_est(:,t); t_since_equinox]);
 Feature_LGCV_est(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
     Feature_ECEF_est(t,1), Feature_ECEF_est(t,2), Feature_ECEF_est(t,3));  
 
-% Convert LGCV to RAE
-Feature_RAE_est(t,:) = LGCV_to_RAE(Feature_LGCV_est);
-
-% Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-Feature_RAE_est(t,1) = normrnd(Feature_RAE_est(t,1), sigma_tracking_range); 
-Feature_RAE_est(t,2) = normrnd(Feature_RAE_est(t,2), sigma_tracking_angle); 
-Feature_RAE_est(t,3) = normrnd(Feature_RAE_est(t,3), sigma_tracking_angle); 
-
-% Convert RAE with noise back to LGCV
-Feature_LGCV_est(t,:) = RAE_to_LGCV(Feature_RAE_est);
-
 % Convert LGCV to Body using estimated angles
 Feature_Body_est(t,:) = LGCV_to_Body(transpose(Attitude_Est(t,:)),Feature_LGCV_est(t,:));
 
+% Add Errors to Body readings
+Feature_Body_est(t,:) = normrnd(Feature_Body_est(t,:),sigma_tracking_errors);
+
+% Convert LGCV to ECEF
 
 end
 
