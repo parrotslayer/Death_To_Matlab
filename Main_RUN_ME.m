@@ -322,11 +322,26 @@ Nadir_ECEF_est(t,:) = LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est
 
 end
 
+% Errors
+Nadir_Error = Nadir_ECEF_true - Nadir_ECEF_est;
+
+%% plots
 figure
 plot(1:time_period,Nadir_ECEF_true(:,1),'b*');
 hold on
 plot(1:time_period,Nadir_ECEF_est(:,1),'r.');
 
+figure
+plot(1:time_period,norm(Nadir_Error))
+title('Error Magnitude vs Time')
+
+figure
+subplot(2,1,1)
+plot(Nadir_Error(:,1),Nadir_Error(:,2));
+title('Nadir Mapping Errors')
+subplot(2,1,2)
+plot(1:time_period,Nadir_Error(:,3))
+title('Down Error')
 %% Generate Plots of Attitude
 % Get rid of zero terms (no data because we skip steps)
 %temp = num_star_readings(time_period);
