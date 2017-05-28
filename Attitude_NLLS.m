@@ -3,10 +3,6 @@ clc
 close all
 clear all
 
-% turn off nearly singular matrix warnings
-ID = 'MATLAB:nearlySingularMatrix';
-%warning('off',ID);
-
 time_period = 24*60*60; %1day
 global step
 step = 100;         %time step for looping calculations
@@ -14,6 +10,11 @@ deg2rad = pi/180;
 rad2deg = 180/pi;
 % Northern: Monday, 20 March 2017 at 10:29 UTC
 julian_date17 = juliandate(datetime([2017,3,20,10,29,0]))*86400;
+
+gs_names = {'Adelaide, South Australia','Hermitage, UK','Cape Caneveral, Florida'};
+gs_llh = [-33.9284989  ,  138.6007456   , 45;...
+    51.4520259, -1.2754 , 110  ;...
+    28.3922182,  -80.6077132 , 2];
 
 %% Get Estimated and Real Satellite positions over 24h
 orbit_params(1)= 7162*1000;              %a - semi major axis meters    
@@ -229,7 +230,11 @@ for t = 1:step:num_times
     
 end
 
-%% Generate Plots
+%% Calculate Nadir Point and North/East Swath Edge
+
+
+
+%% Generate Plots of Attitude
 % Get rid of zero terms (no data because we skip steps)
 %temp = num_star_readings(time_period);
 num_star_readings(num_star_readings == 0) = NaN;

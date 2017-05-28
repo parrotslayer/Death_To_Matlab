@@ -13,7 +13,7 @@ orbit_params(5)=25.5213;                  %omega - degrees
 orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
 orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
 
-%function [ECEF_sat_true,ECI_sat_est, ECEF_sat_est,LGCV_sat_est] = Get_Estimated_ECEF(orbit_params)
+%function [ECEF_sat_true,LGCV_sat_true,ECI_sat_est, ECEF_sat_est,LGCV_sat_est] = Get_Estimated_ECEF(orbit_params)
 % clc
 % clear all 
 % close all
@@ -328,8 +328,9 @@ hold on
 plot3(ECI_est(1,:),ECI_est(2,:),ECI_est(3,:),'r.')
 legend('Earth','Real Orbit','Estimated Orbit')
 
-%output variables
+%% Output variables
 ECEF_sat_true = ECEF_sat;
+LGCV_sat_true = LGCV_sat(:,:,sat_num);
 ECI_sat_est = ECEF_est;
 ECEF_sat_est = ECEF_est;
 LGCV_sat_est = LGCV_est;     %for attitude determination
