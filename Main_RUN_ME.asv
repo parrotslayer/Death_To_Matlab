@@ -261,28 +261,25 @@ for t = 1:step:num_times
 end
 
 %% Calculate Nadir Point and North/East Swath Edge
-%clear all 
-%close all
-%clc
-%load('Workspace_28_5_12pm')
-
 % Tracking Errors
 sigma_tracking_errors = 100;    %meters
 
-Sat_LLH_true = zeros(time_period,3);
-Feature_ECI_true = zeros(3,time_period);
-Nadir_ECEF_true = zeros(time_period,3);
-Feature_ECI_est = zeros(3,time_period);
-Feature_ECEF_est = zeros(time_period,3);
-Feature_LGCV_est = zeros(time_period,3);
-Feature_RAE_est = zeros(time_period,3);
-Feature_Body_est = zeros(time_period,3);
-Nadir_Body_est = zeros(time_period,3);
-Nadir_LGCV_est = zeros(time_period,3);
-Nadir_ECEF_est = zeros(time_period,3);
+Sat_LLH_true = NaN(time_period,3);
+Feature_ECI_true = NaN(3,time_period);
+Nadir_ECEF_true = NaN(time_period,3);
+Feature_ECI_est = NaN(3,time_period);
+Feature_ECEF_est = NaN(time_period,3);
+Feature_LGCV_est = NaN(time_period,3);
+Feature_RAE_est = NaN(time_period,3);
+Feature_Body_est = NaN(time_period,3);
+Nadir_Body_est = NaN(time_period,3);
+Nadir_LGCV_est = NaN(time_period,3);
+Nadir_ECEF_est = NaN(time_period,3);
+Nadir_Error = NaN(time_period,3);
+Nadir_Error_Magnitude = NaN(time_period,1);
 
 for t = 1:step:time_period
-%% Get True Position of the Nadir Point 
+%% Get True Position of the Nadir Point and Swath Edge
 % Convert satellite's estimated ECEF position to est LLH
 Sat_LLH_true(t,:) = ECEF_to_LLH(Sat_ECEF_true(1,t),Sat_ECEF_true(2,t),Sat_ECEF_true(3,t));
 
@@ -294,6 +291,18 @@ Feature_ECI_true(:,t) = temp;
 current_time = time_epoch + t;    %time since last epoch for time = n
 t_since_equinox = current_time - julian_date17;
 Nadir_ECEF_true(t,:) = ECI_to_ECEF([Feature_ECI_true(:,t); t_since_equinox]);
+
+% Convert ECEF to LGCV
+
+% Convert LGCV to Body
+
+% Rotate Body Frame by FOV/2 in the North Direction
+th = FOV/2
+C_rot = [cos(th), 0, -sin(th);
+    ]
+% Body to LGCV
+
+% LGCV to ECEF
 
 %% Get Estimated Nadir Point
 % Set magnitude of ECI vector to Radius of the Earth
@@ -320,26 +329,31 @@ Nadir_LGCV_est(t,:) = Body_to_LGCV(Attitude_Est(t,:),Nadir_Body_est(t,:));
 Nadir_ECEF_est(t,:) = LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
     Nadir_LGCV_est(t,1), Nadir_LGCV_est(t,2), Nadir_LGCV_est(t,3));
 
+% Calculate Nadir Errors
+Nadir_Error(t,:) = Nadir_ECEF_true(t,:) - Nadir_ECEF_est(t,:);
+Nadir_Error_Magnitude(t) = norm(Nadir_Error(t,:));
 end
 
-% Errors
-Nadir_Error = Nadir_ECEF_true - Nadir_ECEF_est;
+%% Tracking Plots
 
 figure
-plot(1:time_period,Nadir_ECEF_true(:,1),'b*');
+plot(1:time_period,Nadir_ECEF_true(:,1),'b');
 hold on
 plot(1:time_period,Nadir_ECEF_est(:,1),'r.');
+title('X Nadir Est vs Real')
 
 figure
-plot(1:time_period,norm(Nadir_Error))
-title('Err')
+plot(1:time_period,Nadir_Error_Magnitude,'k.')
+title('Error Magnitude vs Time')
+
 figure
 subplot(2,1,1)
-plot(Nadir_Error(:,1),Nadir_Error(:,2));
+plot(Nadir_Error(:,1),Nadir_Error(:,2),'.');
 title('Nadir Mapping Errors')
 subplot(2,1,2)
-plot(1:time_period,Nadir_Error(:,3))
+plot(1:time_period,Nadir_Error(:,3),'.')
 title('Down Error')
+
 %% Generate Plots of Attitude
 % Get rid of zero terms (no data because we skip steps)
 %temp = num_star_readings(time_period);

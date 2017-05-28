@@ -102,47 +102,21 @@ end
 
 %% Plot the RAE of each satellite when visible and all RAE
 % issue with step because if step ~= 1 the plot for all RAE wont show
-if step == 100
-    for k = 1 : num_gs
-        string = gs_names{k};
-        figure
-        subplot(3,1,1)
-        plot ((1:time_period),RAE_sat(1,:,k),'.b');
-        hold on
-        plot ((1:time_period),RAE_FULL(1,:,k),'r');
-        title ({string;'Range (m)'})
-        
-        subplot(3,1,2)
-        plot ((1:time_period),RAE_sat(2,:,k),'.b');
-        hold on
-        plot ((1:time_period),RAE_FULL(2,:,k),'r');
-        title ('Azimuth (deg)')
-        
-        subplot(3,1,3)
-        plot ((1:time_period),RAE_sat(3,:,k),'.b');
-        hold on
-        plot ((1:time_period),RAE_FULL(3,:,k),'r');
-        title ( 'Theta (Elevation) (deg) ' )
-        xlabel('Time (s)')
-        legend('When Visible', 'Entire Duration')
-    end
-else
-    for k = 1 : num_gs
-        string = gs_names{k};
-        figure
-        subplot(3,1,1)
-        plot ((1:time_period),RAE_sat(1,:,k),'.b');
-        title ({string;'Range (m)'})
-        
-        subplot(3,1,2)
-        plot ((1:time_period),RAE_sat(2,:,k),'.b');
-        title ('Azimuth (deg)')
-        
-        subplot(3,1,3)
-        plot ((1:time_period),RAE_sat(3,:,k),'.b');
-        title ( 'Theta (Elevation) (deg) ' )
-        xlabel('Time (s)')
-    end
+for k = 1 : num_gs
+    string = gs_names{k};
+    figure
+    subplot(3,1,1)
+    plot ((1:time_period),RAE_sat(1,:,k),'.b');
+    title ({string;'Range (m)'})
+
+    subplot(3,1,2)
+    plot ((1:time_period),RAE_sat(2,:,k),'.b');
+    title ('Azimuth (deg)')
+
+    subplot(3,1,3)
+    plot ((1:time_period),RAE_sat(3,:,k),'.b');
+    title ( 'Theta (Elevation) (deg) ' )
+    xlabel('Time (s)')
 end
 
 %% Add Tracking Errors to Readings
@@ -230,8 +204,7 @@ Omega_est = nlls_orbit(gs_num,4);
 omega_est = nlls_orbit(gs_num,5);
 M_est = nlls_orbit(gs_num,6);
 
-ff = 359.65;   %offset to sync estimated and real ECI values (361 good)
-ff = -(3754-3351);
+ff = -404;   %offset to sync estimated and real ECI values (361 good)
 
 %get estimated eci orbit from NLLS estimation of a single ground station
 ECI_est = Orbit_to_ECI_and_Simulate(a_est,e_est,i_est,Omega_est,omega_est,...
