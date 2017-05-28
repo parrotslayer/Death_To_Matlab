@@ -156,19 +156,23 @@ gain = 1;
 range_error = gain*0.01; %10mm error
 angle_error = gain*1/3600;   %1 arc second error
 
-for t = 1 : time_period
-    for k = 1 : num_gs
-        
-        range(k,t) = RAE_sat(1,t,k); + range_error*(-1 + rand);
-        azimuth(k,t) = RAE_sat(2,t,k); + angle_error*(-1 + rand);
-        elevation(k,t) = RAE_sat(3,t,k) + angle_error*(-1 + rand);
-
 %use gaussian errors
-%         range(k,t) = normrnd(RAE_sat(1,t,k), range_error);
-%         azimuth(k,t) = normrnd(RAE_sat(2,t,k), angle_error);
-%         elevation(k,t) = normrnd(RAE_sat(3,t,k), angle_error);
-    end
+for k = 1:num_gs
+range(k,:) = normrnd(RAE_sat(1,:,k), range_error);
+azimuth(k,:) = normrnd(RAE_sat(2,:,k), angle_error);
+elevation(k,:) = normrnd(RAE_sat(3,:,k), angle_error);
 end
+
+% for t = 1 : time_period
+%     for k = 1 : num_gs
+% 
+% %random errors are faster
+%         range(k,t) = RAE_sat(1,t,k); + range_error*(-1 + rand);
+%         azimuth(k,t) = RAE_sat(2,t,k); + angle_error*(-1 + rand);
+%         elevation(k,t) = RAE_sat(3,t,k) + angle_error*(-1 + rand);
+% 
+%     end
+% end
 
 %% Initial Estimate of R_ECI and V_ECI
 % From the average of guesses from first 3 observations of each,

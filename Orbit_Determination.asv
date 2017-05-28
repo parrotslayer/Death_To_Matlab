@@ -156,18 +156,11 @@ gain = 1;
 range_error = gain*0.01; %10mm error
 angle_error = gain*1/3600;   %1 arc second error
 
-for t = 1 : time_period
-    for k = 1 : num_gs
-        
-        range(k,t) = RAE_sat(1,t,k); + range_error*(-1 + rand);
-        azimuth(k,t) = RAE_sat(2,t,k); + angle_error*(-1 + rand);
-        elevation(k,t) = RAE_sat(3,t,k) + angle_error*(-1 + rand);
-
 %use gaussian errors
-%         range(k,t) = normrnd(RAE_sat(1,t,k), range_error);
-%         azimuth(k,t) = normrnd(RAE_sat(2,t,k), angle_error);
-%         elevation(k,t) = normrnd(RAE_sat(3,t,k), angle_error);
-    end
+for k = 1:num_gs
+range(k,:) = normrnd(RAE_sat(1,:,k), range_error);
+azimuth(k,:) = normrnd(RAE_sat(2,:,k), angle_error);
+elevation(k,:) = normrnd(RAE_sat(3,:,k), angle_error);
 end
 
 %% Initial Estimate of R_ECI and V_ECI
@@ -308,8 +301,8 @@ legend('Earth','Real Orbit','Estimated Orbit')
 %% Output variables
 %Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est
 Sat_ECI_true = ECI_sat;
-
-Sat_ECEF_est = ECEF_est;
+Sat_ECEF_true = ECEF_sat(:,:,gs_num);
+Sat_ECI_est = ECI_est;
 Sat_ECEF_est = ECEF_est;
 
 end

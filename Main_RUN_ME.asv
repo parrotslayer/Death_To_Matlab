@@ -81,6 +81,10 @@ ylabel('y (m)')
 zlabel('z (m)')
 
 %% Get LGCV and Body frame coordinates
+
+sigma_star = 0.001;      % direction
+sigma_mag = 0.01;        % direction
+
 %Preallocate for speed
 Sat_LLH_est = zeros(time_period,3);
 Mag_ECI = zeros(3,time_period);
@@ -108,10 +112,21 @@ Mag_ECEF(t,:) = ECI_to_ECEF([Mag_ECI(:,t); t_since_equinox]);
 
 % Convert ECEF to LGCV wrt Satellite's position
 Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
-    Mag_ECEF(t,1), Mag_ECEF(t,1), Mag_ECEF(t,1));  
+    Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));  
 
-% Convert LGCV to Body using real angles
-Mag_Body(t,:) = LGCV_to_Body(Attitude_Real(:,t),Mag_LGCV(t,:));
+% Convert LGCV to RAE
+Feature_RAE_est(t,:) = LGCV_to_RAE(Feature_LGCV_est);
+
+% Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+Feature_RAE_est(t,1) = normrnd(Feature_RAE_est(t,1), sigma_tracking_range); 
+Feature_RAE_est(t,2) = normrnd(Feature_RAE_est(t,2), sigma_tracking_angle); 
+Feature_RAE_est(t,3) = normrnd(Feature_RAE_est(t,3), sigma_tracking_angle); 
+
+% Convert RAE with noise back to LGCV
+Feature_LGCV_est(t,:) = RAE_to_LGCV(Feature_RAE_est);
+
+% Convert LGCV to Body using estimated angles
+Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Est(t,:)),Feature_LGCV_est(t,:));
 
 % Get unit vectors from the star trackers
 temp = Get_Star_Tracker(Sat_LLH_est(t,:),t_since_equinox,Star_Constellation_ECI,FOV);
@@ -244,16 +259,27 @@ for t = 1:step:num_times
 end
 
 %% Calculate Nadir Point and North/East Swath Edge
-%clear all 
-%close all
-%clc
-%load('Workspace_28_5_12pm')
+clear all 
+close all
+clc
+load('Workspace_28_5_12pm')
+
+% Tracking Errors
+sigma_tracking_range = 1000;    %meters
+sigma_tracking_angle = 1/60*deg2rad;    %radians
+sigma_remote_range = 1000; %meters
+sigma_remote_angle = 1/60*deg2rad;  %radians
 
 Sat_LLH_true = zeros(time_period,3);
 Feature_ECI_true = zeros(3,time_period);
 Feature_ECEF_true = zeros(time_period,3);
+Feature_ECI_est = zeros(3,time_period);
+Feature_ECEF_est = zeros(time_period,3);
+Feature_LGCV_est = zeros(time_period,3);
+Feature_RAE_est = zeros(time_period,3);
+Feature_Body_est = zeros(time_period,3);
 
-for t = 1:step:300
+for t = 1:step:time_period
 %% Get True Position of the Nadir Point 
 % Convert satellite's estimated ECEF position to est LLH
 Sat_LLH_true(t,:) = ECEF_to_LLH(Sat_ECEF_true(1,t),Sat_ECEF_true(2,t),Sat_ECEF_true(3,t));
@@ -274,6 +300,24 @@ Feature_ECI_est(:,t) = temp;
 
 % Convert ECI to ECEF
 Feature_ECEF_est(t,:) = ECI_to_ECEF([Feature_ECI_est(:,t); t_since_equinox]);
+
+% Convert ECEF to LGCV wrt Satellite's position
+Feature_LGCV_est(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+    Feature_ECEF_est(t,1), Feature_ECEF_est(t,2), Feature_ECEF_est(t,3));  
+
+% Convert LGCV to RAE
+Feature_RAE_est(t,:) = LGCV_to_RAE(Feature_LGCV_est);
+
+% Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+Feature_RAE_est(t,1) = normrnd(Feature_RAE_est(t,1), sigma_tracking_range); 
+Feature_RAE_est(t,2) = normrnd(Feature_RAE_est(t,2), sigma_tracking_angle); 
+Feature_RAE_est(t,3) = normrnd(Feature_RAE_est(t,3), sigma_tracking_angle); 
+
+% Convert RAE with noise back to LGCV
+Feature_LGCV_est(t,:) = RAE_to_LGCV(Feature_RAE_est);
+
+% Convert LGCV to Body using estimated angles
+Feature_Body_est(t,:) = LGCV_to_Body(transpose(Attitude_Est(t,:)),Feature_LGCV_est(t,:));
 
 
 end
