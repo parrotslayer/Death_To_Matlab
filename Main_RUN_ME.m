@@ -8,6 +8,7 @@ global step
 global gs_num;  %the chosen ground station  
 deg2rad = pi/180;
 rad2deg = 180/pi;
+radius_earth = 6378137; %from lecture slides
 % Northern: Monday, 20 March 2017 at 10:29 UTC
 julian_date17 = juliandate(datetime([2017,3,20,10,29,0]))*86400;
 
@@ -26,7 +27,7 @@ orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
 orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
 
 % Use code from Assignment 2 to model estimated orbit and real orbit
-[Sat_ECI_true,Sat_ECI_est, Sat_ECEF_est,Sat_LGCV_est] = Orbit_Determination(orbit_params);
+[Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est] = Orbit_Determination(orbit_params);
 save('Orbit Determination_Data')
 %load('Orbit Determination_Data')
 
@@ -81,7 +82,7 @@ zlabel('z (m)')
 
 %% Get LGCV and Body frame coordinates
 %Preallocate for speed
-Sat_LLH = zeros(time_period,3);
+Sat_LLH_est = zeros(time_period,3);
 Mag_ECI = zeros(3,time_period);
 Mag_ECEF = zeros(time_period,3);
 Mag_LGCV = zeros(time_period,3);
@@ -95,7 +96,7 @@ Star_Body = zeros(24,3,time_period);
 
 for t = 1:step:time_period
 % Convert satellite's estimated ECEF position to est LLH
-Sat_LLH(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
+Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
 
 % Get unit vector of magnetometer readings
 Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
@@ -106,14 +107,14 @@ t_since_equinox = current_time - julian_date17;
 Mag_ECEF(t,:) = ECI_to_ECEF([Mag_ECI(:,t); t_since_equinox]);
 
 % Convert ECEF to LGCV wrt Satellite's position
-Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH(t,1),Sat_LLH(t,2),Sat_LLH(t,3),...
-    Mag_ECEF(t,1), Mag_ECEF(t,1), Mag_ECEF(t,1));  
+Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+    Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));  
 
 % Convert LGCV to Body using real angles
 Mag_Body(t,:) = LGCV_to_Body(Attitude_Real(:,t),Mag_LGCV(t,:));
 
 % Get unit vectors from the star trackers
-temp = Get_Star_Tracker(Sat_LLH(t,:),t_since_equinox,Star_Constellation_ECI,FOV);
+temp = Get_Star_Tracker(Sat_LLH_est(t,:),t_since_equinox,Star_Constellation_ECI,FOV);
 % Size of matrix changes so this code makes sure the matrix can be added
 [r,c] = size(temp);
 Star_LGCV(1:r,:,t) = temp; 
@@ -122,6 +123,11 @@ Star_LGCV(1:r,:,t) = temp;
 for k = 1:r
     Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));       
 end
+
+    if t == 10001 || t==20001 ||t==30001||t==40001||t==50001||t==60001||t==70001||t==80001
+        disp('Frame Conversion Timestep = ')
+        disp(t)
+    end
 
 end
 
@@ -238,10 +244,48 @@ for t = 1:step:num_times
 end
 
 %% Calculate Nadir Point and North/East Swath Edge
-clear all 
-close all
+%clear all 
+%close all
+%clc
+%load('Workspace_28_5_12pm')
 
-load('Workspace_28_5_11am')
+Sat_LLH_true = zeros(time_period,3);
+Feature_ECI_true = zeros(3,time_period);
+Feature_ECEF_true = zeros(time_period,3);
+Feature_ECI_est = zeros(3,time_period);
+Feature_ECEF_est = zeros(time_period,3);
+Feature_LGCV_est = zeros(time_period,3);
+Feature_Body_est = zeros(time_period,3);
+
+for t = 1:step:300
+%% Get True Position of the Nadir Point 
+% Convert satellite's estimated ECEF position to est LLH
+Sat_LLH_true(t,:) = ECEF_to_LLH(Sat_ECEF_true(1,t),Sat_ECEF_true(2,t),Sat_ECEF_true(3,t));
+
+% Set magnitude of ECI vector to Radius of the Earth
+temp = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
+Feature_ECI_true(:,t) = temp;
+
+% Convert ECI to ECEF
+current_time = time_epoch + t;    %time since last epoch for time = n
+t_since_equinox = current_time - julian_date17;
+Feature_ECEF_true(t,:) = ECI_to_ECEF([Feature_ECI_true(:,t); t_since_equinox]);
+
+%% Get Estimated Nadir Point
+% Set magnitude of ECI vector to Radius of the Earth
+temp = Sat_ECI_est(:,t)*radius_earth/norm(Sat_ECI_est(:,t));
+Feature_ECI_est(:,t) = temp;
+
+% Convert ECI to ECEF
+Feature_ECEF_est(t,:) = ECI_to_ECEF([Feature_ECI_est(:,t); t_since_equinox]);
+
+% Convert ECEF to LGCV wrt Satellite's position
+Feature_LGCV_est(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+    Feature_ECEF_est(t,1), Feature_ECEF_est(t,2), Feature_ECEF_est(t,3));  
+
+% Convert LGCV to Body using real angles
+Feature_Body_est(t,:) = LGCV_to_Body(transpose(Attitude_Est(t,:)),Feature_LGCV_est(t,:));
+end
 
 
 

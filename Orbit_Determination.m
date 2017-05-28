@@ -13,7 +13,7 @@
 % orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
 % orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
 
-function [ECI_sat_true,ECI_sat_est,ECEF_sat_est,LGCV_sat_est] = Orbit_Determination(orbit_params)
+function [Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est] = Orbit_Determination(orbit_params)
 % Constants
 % Define variable u = GM, M is mass of earth
 G = 6.67408e-11 ;
@@ -23,18 +23,7 @@ rad2deg = 180/pi;
 deg2rad = pi/180;
 
 %% Get GLONASS data
-
 PlotEarthLatLong
-% ground station names and locations
-% gs_names = {'Schyolkovo','Komsomolsk','St.Petersburg'};
-% gs_llh = [55.910087  ,  38.009208   , 150;...
-%     49.0156679, 33.6450451 , 72  ;...
-%     59.9342802,  30.3350986 , 17];
-% 
-% gs_llh = [55.910087  ,  38.009208   , 150;...
-%     -49.0156679, 133.6450451 , 72  ;...
-%     -79.9342802,  30.3350986 , 17];
-
 gs_names = {'Adelaide, South Australia','Hermitage, UK','Cape Caneveral, Florida'};
 gs_llh = [-33.9284989  ,  138.6007456   , 45;...
     51.4520259, -1.2754 , 110  ;...
@@ -317,9 +306,10 @@ plot3(ECI_est(1,:),ECI_est(2,:),ECI_est(3,:),'r.')
 legend('Earth','Real Orbit','Estimated Orbit')
 
 %% Output variables
-ECI_sat_true = ECI_sat;
-ECI_sat_est = ECEF_est;
-ECEF_sat_est = ECEF_est;
-LGCV_sat_est = LGCV_est;     %for attitude determination
+%Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est
+Sat_ECI_true = ECI_sat;
+Sat_ECEF_true = ECEF_sat(:,:,gs_num);
+Sat_ECI_est = ECI_est;
+Sat_ECEF_est = ECEF_est;
 
 end
