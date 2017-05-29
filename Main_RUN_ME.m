@@ -23,6 +23,8 @@ orbit_params(2)=0.0000872;                %e - eccentricity deg
 orbit_params(3)=98.7401;                  %inc - inclination degrees
 orbit_params(4)=142.1145;                 %Omega - degrees
 orbit_params(5)=25.5213;                  %omega - degrees
+
+%******************* RE calc mean anomaly ***********************
 orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
 orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
 
