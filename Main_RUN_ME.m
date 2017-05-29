@@ -5,7 +5,7 @@ clear all
 
 time_period = 24*60*60; %1day
 global step
-global gs_num;  %the chosen ground station  
+global gs_num;  %the chosen ground station
 deg2rad = pi/180;
 rad2deg = 180/pi;
 radius_earth = 6378137; %from lecture slides
@@ -18,7 +18,7 @@ gs_llh = [-33.9284989  ,  138.6007456   , 45;...
     28.3922182,  -80.6077132 , 2];
 
 %% Get Estimated and Real Satellite positions over 24h
-orbit_params(1)= 7162*1000;              %a - semi major axis meters    
+orbit_params(1)= 7162*1000;              %a - semi major axis meters
 orbit_params(2)=0.0000872;                %e - eccentricity deg
 orbit_params(3)=98.7401;                  %inc - inclination degrees
 orbit_params(4)=142.1145;                 %Omega - degrees
@@ -56,7 +56,7 @@ th_g0 = 205.3166*deg2rad; %greenwhich sidereal time at epoch
 time_epoch = orbit_params(7) * 86400;  %time of epoch in seconds
 
 %constants for generating constellation
-radius = 10e10;      %some big number 
+radius = 10e10;      %some big number
 inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
@@ -101,65 +101,65 @@ Star_RAE = zeros(24,3,time_period);
 Star_Body = zeros(24,3,time_period);
 
 for t = 1:step:time_period
-%% Get Magnetometer Body and LGCV Readings with Noise
-% Convert satellite's estimated ECEF position to est LLH
-Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
-
-% Get unit vector of magnetometer readings
-Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
-
-% Convert ECI to ECEF
-current_time = time_epoch + t;    %time since last epoch for time = n
-t_since_equinox = current_time - julian_date17;
-Mag_ECEF(t,:) = ECI_to_ECEF([Mag_ECI(:,t); t_since_equinox]);
-
-% Convert ECEF to LGCV wrt Satellite's position
-Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
-    Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));  
-
-% Convert LGCV to RAE
-Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
-
-% Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-Mag_RAE(t,1) = Mag_RAE(t,1); 
-Mag_RAE(t,2) = normrnd(Mag_RAE(t,2), sigma_mag); 
-Mag_RAE(t,3) = normrnd(Mag_RAE(t,3), sigma_mag); 
-
-% Convert RAE with noise back to LGCV
-Mag_LGCV(t,:) = RAE_to_LGCV(Mag_RAE);
-
-% Convert LGCV with noise to Body using Real angles
-Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Real(:,t)),Mag_LGCV(t,:));
-
-%% Get Star Tracker Body and LGCV Readings with Noise
-% Get unit vectors from the star trackers
-temp = Get_Star_Tracker(Sat_LLH_est(t,:),t_since_equinox,Star_Constellation_ECI,FOV);
-% Size of matrix changes so this code makes sure the matrix can be added
-[r,c] = size(temp);
-Star_LGCV(1:r,:,t) = temp; 
-
-for k = 1:r
-% Convert LGCV to RAE
-Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
-
-% Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-Star_RAE(k,1,t) = Star_RAE(k,1,t); 
-Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag); 
-Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag); 
-
-% Convert RAE with noise back to LGCV
-Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
-
-% Convert LGCV to Body using Real Attitudes
-Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));     
-end
-
-% Progress Report
-if t == 10001 || t==20001 ||t==30001||t==40001||t==50001||t==60001||t==70001||t==80001
-    disp('Frame Conversion Timestep = ')
-    disp(t)
-end
-
+    %% Get Magnetometer Body and LGCV Readings with Noise
+    % Convert satellite's estimated ECEF position to est LLH
+    Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
+    
+    % Get unit vector of magnetometer readings
+    Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
+    
+    % Convert ECI to ECEF
+    current_time = time_epoch + t;    %time since last epoch for time = n
+    t_since_equinox = current_time - julian_date17;
+    Mag_ECEF(t,:) = ECI_to_ECEF([Mag_ECI(:,t); t_since_equinox]);
+    
+    % Convert ECEF to LGCV wrt Satellite's position
+    Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+        Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));
+    
+    % Convert LGCV to RAE
+    Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
+    
+    % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+    Mag_RAE(t,1) = Mag_RAE(t,1);
+    Mag_RAE(t,2) = normrnd(Mag_RAE(t,2), sigma_mag);
+    Mag_RAE(t,3) = normrnd(Mag_RAE(t,3), sigma_mag);
+    
+    % Convert RAE with noise back to LGCV
+    Mag_LGCV(t,:) = RAE_to_LGCV(Mag_RAE);
+    
+    % Convert LGCV with noise to Body using Real angles
+    Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Real(:,t)),Mag_LGCV(t,:));
+    
+    %% Get Star Tracker Body and LGCV Readings with Noise
+    % Get unit vectors from the star trackers
+    temp = Get_Star_Tracker(Sat_LLH_est(t,:),t_since_equinox,Star_Constellation_ECI,FOV);
+    % Size of matrix changes so this code makes sure the matrix can be added
+    [r,c] = size(temp);
+    Star_LGCV(1:r,:,t) = temp;
+    
+    for k = 1:r
+        % Convert LGCV to RAE
+        Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
+        
+        % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+        Star_RAE(k,1,t) = Star_RAE(k,1,t);
+        Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag);
+        Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag);
+        
+        % Convert RAE with noise back to LGCV
+        Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
+        
+        % Convert LGCV to Body using Real Attitudes
+        Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));
+    end
+    
+    % Progress Report
+    if t == 10001 || t==20001 ||t==30001||t==40001||t==50001||t==60001||t==70001||t==80001
+        disp('Frame Conversion Timestep = ')
+        disp(t)
+    end
+    
 end
 
 %% Apply NLLS to Determine Attitude for each timestep
@@ -184,13 +184,13 @@ DOP_Yaw = zeros(num_times,1);
 
 %loop for the number of times
 for t = 1:step:num_times
-%    for t = 7201:step:7301
-
+    %    for t = 7201:step:7301
+    
     %init X vector and other variables
     X_vector = [0;0;0];    %yaw, pitch, roll
     delta_x = 10e9;
     itter = 0;
-
+    
     %clear matricies in case jacobian is a different size
     clear H
     clear y_est
@@ -200,7 +200,7 @@ for t = 1:step:num_times
     
     % Get number of star readings for this timestep
     num_star_readings(t) = length(find(Star_LGCV(:,1,t)));
-
+    
     % Perform NLLS
     while norm(delta_x) > tol
         %build jacobian for magnetometer readings
@@ -277,83 +277,98 @@ Swath_Error = NaN(time_period,3);
 Swath_Error_Magnitude = NaN(time_period,1);
 
 for t = 1:step:time_period
-%% Get True Position of the Nadir Point and North Swath Edge
-% Convert satellite's estimated ECEF position to est LLH
-Sat_LLH_true(t,:) = ECEF_to_LLH(Sat_ECEF_true(1,t),Sat_ECEF_true(2,t),Sat_ECEF_true(3,t));
-
-% Set magnitude of ECI vector to Radius of the Earth
-Feature_ECI_true = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
-
-% Convert ECI to ECEF
-current_time = time_epoch + t;    %time since last epoch for time = n
-t_since_equinox = current_time - julian_date17;
-Nadir_ECEF_true(t,:) = ECI_to_ECEF([Feature_ECI_true; t_since_equinox]);
-
-% Convert ECEF to LGCV
-Feature_LGCV_true =  ECEF_to_LGCV(Sat_LLH_true(t,1),Sat_LLH_true(t,2),Sat_LLH_true(t,3),...
-    Nadir_ECEF_true(t,1), Nadir_ECEF_true(t,2), Nadir_ECEF_true(t,3));  
-
-% Convert LGCV to Body
-Feature_Body_true = LGCV_to_Body(Attitude_Real(:,t),Feature_LGCV_true');
-
-% Rotate Body Frame by FOV/2 in the North Direction
-th = FOV/2;
-C_rot = [cos(th) 0 -sin(th);
-    0 1 0;
-    sin(th) 0 cos(th)];
-Feature_Body_true = C_rot*Feature_Body_true';
-
-% Body to LGCV
-Feature_LGCV_true = Body_to_LGCV(Attitude_Real(:,t),Feature_Body_true');
-
-% LGCV to ECEF
-Swath_ECEF_true(t,:) =  LGCV_to_ECEF(Sat_LLH_true(t,1),Sat_LLH_true(t,2),Sat_LLH_true(t,3),...
-    Feature_LGCV_true(1), Feature_LGCV_true(2), Feature_LGCV_true(3)); 
-
-%% Get Estimated Nadir Point and North Swath Edge
-% Set magnitude of ECI vector to Radius of the Earth
-Feature_ECI_est = Sat_ECI_est(:,t)*radius_earth/norm(Sat_ECI_est(:,t));
-
-% Use real ECI for Nadir Point Estimates Testing
-%Feature_ECI_est = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
-
-% Convert ECI to ECEF
-Feature_ECEF_est = ECI_to_ECEF([Feature_ECI_est; t_since_equinox]);
-
-% Convert ECEF to LGCV wrt Satellite's position
-Feature_LGCV_est =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
-    Feature_ECEF_est(1), Feature_ECEF_est(2), Feature_ECEF_est(3));  
-
-% Convert LGCV to Body using estimated angles
-Feature_Body_est = LGCV_to_Body(transpose(Attitude_est(t,:)),Feature_LGCV_est');
-
-% Add Errors to Body readings
-Nadir_Body_est = normrnd(Feature_Body_est,sigma_tracking_errors);
-
-% Convert Body to LGCV
-Nadir_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Nadir_Body_est);
-
-% Convert LGCV to ECEF
-Nadir_ECEF_est(t,:) = LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
-    Nadir_LGCV_est(1), Nadir_LGCV_est(2), Nadir_LGCV_est(3));
-
-% Rotate Body Frame by FOV/2 in the North Direction
-Swath_Body_est = C_rot*Feature_Body_est';
-
-% Body to LGCV
-Swath_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Swath_Body_est');
-
-% LGCV to ECEF
-Swath_ECEF_est(t,:) =  LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
-    Feature_LGCV_est(1), Feature_LGCV_est(2), Feature_LGCV_est(3)); 
-
-% Calculate Nadir Errors
-Nadir_Error(t,:) = Nadir_ECEF_true(t,:) - Nadir_ECEF_est(t,:);
-Nadir_Error_Magnitude(t) = norm(Nadir_Error(t,:));
-
-% Calculate Swath Errors
-Swath_Error(t,:) = Swath_ECEF_true(t,:) - Swath_ECEF_est(t,:);
-Swath_Error_Magnitude(t) = norm(Swath_Error(t,:));
+    %% Get True Position of the Nadir Point and North Swath Edge
+    % Convert satellite's estimated ECEF position to est LLH
+    Sat_LLH_true(t,:) = ECEF_to_LLH(Sat_ECEF_true(1,t),Sat_ECEF_true(2,t),Sat_ECEF_true(3,t));
+    
+    % Set magnitude of ECI vector to Radius of the Earth
+    Feature_ECI_true = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
+    
+    % Convert ECI to ECEF
+    current_time = time_epoch + t;    %time since last epoch for time = n
+    t_since_equinox = current_time - julian_date17;
+    Nadir_ECEF_true(t,:) = ECI_to_ECEF([Feature_ECI_true; t_since_equinox]);
+    
+    % Convert ECEF to LGCV
+    Feature_LGCV_true =  ECEF_to_LGCV(Sat_LLH_true(t,1),Sat_LLH_true(t,2),Sat_LLH_true(t,3),...
+        Nadir_ECEF_true(t,1), Nadir_ECEF_true(t,2), Nadir_ECEF_true(t,3));
+    
+    % Convert LGCV to Body
+    Feature_Body_true = LGCV_to_Body(Attitude_Real(:,t),Feature_LGCV_true');
+    
+    % Rotate Body Frame by FOV/2 in the North Direction
+    th = FOV/2;
+    C_rot = [cos(th) 0 -sin(th);
+        0 1 0;
+        sin(th) 0 cos(th)];
+    Feature_Body_true = C_rot*Feature_Body_true';
+    
+    % Scale Body Frame by D as distance is now different
+    D = Viewing_Geometry(Sat_LLH_true(t,3),FOV/2);
+    Feature_Body_true = Feature_Body_true/norm(Feature_Body_true)*D;
+    
+    % Body to LGCV
+    Feature_LGCV_true = Body_to_LGCV(Attitude_Real(:,t),Feature_Body_true');
+    
+    % LGCV to ECEF
+    Swath_ECEF_true(t,:) =  LGCV_to_ECEF(Sat_LLH_true(t,1),Sat_LLH_true(t,2),Sat_LLH_true(t,3),...
+        Feature_LGCV_true(1), Feature_LGCV_true(2), Feature_LGCV_true(3));
+    
+    %% Get Estimated Nadir Point and North Swath Edge
+    % Set magnitude of ECI vector to Radius of the Earth
+    %Feature_ECI_est = Sat_ECI_est(:,t)*radius_earth/norm(Sat_ECI_est(:,t));
+    
+    %**********************************Debugging*****************************
+    % Use real ECI for Nadir Point Estimates Testing
+    Feature_ECI_est = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
+    % Use real satellite LLH
+    %Sat_LLH_est(t,:) = Sat_LLH_true(t,:);
+    %*************************************************************************
+    
+    % Convert ECI to ECEF
+    Feature_ECEF_est = ECI_to_ECEF([Feature_ECI_est; t_since_equinox]);
+    
+    % Convert ECEF to LGCV wrt Satellite's position
+    Feature_LGCV_est =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+        Feature_ECEF_est(1), Feature_ECEF_est(2), Feature_ECEF_est(3));
+    
+    % Convert LGCV to Body using estimated angles
+    Feature_Body_est = LGCV_to_Body(transpose(Attitude_est(t,:)),Feature_LGCV_est');
+    
+    % Add Errors to Body readings
+    Nadir_Body_est = normrnd(Feature_Body_est,sigma_tracking_errors);
+    
+    % Convert Body to LGCV
+    Nadir_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Nadir_Body_est);
+    
+    % Convert LGCV to ECEF
+    Nadir_ECEF_est(t,:) = LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+        Nadir_LGCV_est(1), Nadir_LGCV_est(2), Nadir_LGCV_est(3));
+    
+    % Convert LGCV to Body
+    Swath_Body_est = LGCV_to_Body(Attitude_est(t,:),Nadir_LGCV_est);
+    
+    % Rotate Body Frame by FOV/2 in the North Direction
+    Swath_Body_est = C_rot*Swath_Body_est';
+    
+    % Scale Body Frame by D as distance is now different
+    D = Viewing_Geometry(Sat_LLH_est(t,3),FOV/2);
+    Swath_Body_est = Swath_Body_est/norm(Swath_Body_est)*D;
+    
+    % Body to LGCV
+    Swath_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Swath_Body_est');
+    
+    % LGCV to ECEF
+    Swath_ECEF_est(t,:) =  LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
+        Swath_LGCV_est(1), Swath_LGCV_est(2), Swath_LGCV_est(3));
+    
+    % Calculate Nadir Errors
+    Nadir_Error(t,:) = Nadir_ECEF_true(t,:) - Nadir_ECEF_est(t,:);
+    Nadir_Error_Magnitude(t) = norm(Nadir_Error(t,:));
+    
+    % Calculate Swath Errors
+    Swath_Error(t,:) = Swath_ECEF_true(t,:) - Swath_ECEF_est(t,:);
+    Swath_Error_Magnitude(t) = norm(Swath_Error(t,:));
 end
 
 %% Tracking Plots
