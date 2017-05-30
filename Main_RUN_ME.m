@@ -25,7 +25,11 @@ orbit_params(4)=142.1145;                 %Omega - degrees
 orbit_params(5)=25.5213;                  %omega - degrees
 
 %******************* RE calc mean anomaly ***********************
-orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
+orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly at Time Given
+
+
+
+%****************************************************************
 orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
 
 % Use code from Assignment 2 to model estimated orbit and real orbit

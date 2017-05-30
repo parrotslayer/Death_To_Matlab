@@ -1,10 +1,19 @@
 %% Assignment 2 Q2
-clear
-clc
+%outputs the ECEF of the satellite and the estimated ECEF of the satellite
+
+clc 
+clear all
 close all
 
-function [output1,output2] = Get_Estimated_ECEF()
+orbit_params(1)= 7162*1000;              %a - semi major axis meters    
+orbit_params(2)=0.0000872;                %e - eccentricity deg
+orbit_params(3)=98.7401;                  %inc - inclination degrees
+orbit_params(4)=142.1145;                 %Omega - degrees
+orbit_params(5)=25.5213;                  %omega - degrees
+orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly
+orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
 
+%function [Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est] = Orbit_Determination(orbit_params)
 % Constants
 % Define variable u = GM, M is mass of earth
 G = 6.67408e-11 ;
@@ -14,37 +23,21 @@ rad2deg = 180/pi;
 deg2rad = pi/180;
 
 %% Get GLONASS data
-
 PlotEarthLatLong
-% ground station names and locations
-gs_names = {'Schyolkovo','Komsomolsk','St.Petersburg'};
-gs_llh = [55.910087  ,  38.009208   , 150;...
-    49.0156679, 33.6450451 , 72  ;...
-    59.9342802,  30.3350986 , 17];
-
+gs_names = {'Adelaide, South Australia','Hermitage, UK','Cape Caneveral, Florida'};
+gs_llh = [-33.9284989  ,  138.6007456   , 45;...
+    51.4520259, -1.2754 , 110  ;...
+    28.3922182,  -80.6077132 , 2];
 % Plot the position of the ground stations
 for t = 1 : length(gs_llh(:,1))
     hold on
     plot(gs_llh(t,2),gs_llh(t,1),'MarkerSize',5,'LineWidth',2,'Marker','x','Color','r')
 end
 
-%get the GLONASS data from a MAT file which converted TLE data already
-load GLONASS.mat
-%satellite ephermis data
-ephsat = GLONASS(1,(2:end));
-
-ephsat(1) = 7162*1000;              %a - semi major axis meters    
-ephsat(2)=0.0000872;                %e - eccentricity deg
-ephsat(3)=98.7401;                  %inc - inclination degrees
-ephsat(4)=142.1145;                 %Omega - degrees
-ephsat(5)=25.5213;                  %omega - degrees
-ephsat(6)=283.570800000000;         %Mo - Mean Anomaly
-ephsat(7)=2457866.50000000;         %Time since epoch
-
 % Northern: Monday, 20 March 2017 at 10:29 UTC
 julian_date17 = juliandate(datetime([2017,3,20,10,29,0]))*86400;
 
-time_epoch = max(ephsat(:,7)) * 86400;  %in seconds
+time_epoch = max(orbit_params(:,7)) * 86400;  %in seconds
 time_period = 60 * 60 * 24;  %24 hours
 
 num_sat = 1;  %number of satellites
@@ -52,6 +45,7 @@ num_gs = length(gs_llh(:,1));   %number of ground stations
 
 %pre-allocate ECI, ECEF, LGCV, Polar, Time after Epoch arrays filled with NaN
 ECI_sat = NaN(3,time_period,num_sat);
+ECI_sat_vel = NaN(time_period,1,num_sat);
 ECEF_sat = NaN(3,time_period,num_sat);
 LGCV_sat = NaN(3,time_period,num_gs);
 RAE_sat = NaN(3,time_period,num_gs);
@@ -63,22 +57,15 @@ for k = 1 : num_sat
     % Plot and calculate ECI data starting from the last measured ephemeris
     % Time that has expired until the last measured satellite
 %time since Mean anomaly
-    tafterepoch(k) = time_epoch - ephsat(k,7)*86400;
-    ECI_sat(:,:,k) = Orbit_to_ECI_and_Simulate(ephsat(k,1),ephsat(k,2),ephsat(k,3),...
-        ephsat(k,4),ephsat(k,5),ephsat(k,6),...
+    tafterepoch(k) = time_epoch - orbit_params(k,7)*86400;
+    [ECI_sat(:,:,k),ECI_sat_vel(:,:,k)] = Orbit_to_ECI_and_Simulate(orbit_params(k,1),orbit_params(k,2),orbit_params(k,3),...
+        orbit_params(k,4),orbit_params(k,5),orbit_params(k,6),...
         tafterepoch(k),time_period);
-end
-
-% plot the 3D ECI Orbits
-PlotEarthSphere
-hold on
-for k = 1 : num_sat
-    plot3(ECI_sat(1,:,k),ECI_sat(2,:,k),ECI_sat(3,:,k))
 end
 
 %% Get the Range Azimuth Elevation over 24 hours
 global step
-step = 100;  %if we dont want to calculate every second
+step = 10;  %if we dont want to calculate every second
 
 % Get ECEF coordinates of ALL satellites over 24 hour period
 for t = 1:step:time_period
@@ -115,47 +102,21 @@ end
 
 %% Plot the RAE of each satellite when visible and all RAE
 % issue with step because if step ~= 1 the plot for all RAE wont show
-if step == 100
-    for k = 1 : num_gs
-        string = gs_names{k};
-        figure
-        subplot(3,1,1)
-        plot ((1:time_period),RAE_sat(1,:,k),'.b');
-        hold on
-        plot ((1:time_period),RAE_FULL(1,:,k),'r');
-        title ({string;'Range (m)'})
-        
-        subplot(3,1,2)
-        plot ((1:time_period),RAE_sat(2,:,k),'.b');
-        hold on
-        plot ((1:time_period),RAE_FULL(2,:,k),'r');
-        title ('Azimuth (deg)')
-        
-        subplot(3,1,3)
-        plot ((1:time_period),RAE_sat(3,:,k),'.b');
-        hold on
-        plot ((1:time_period),RAE_FULL(3,:,k),'r');
-        title ( 'Theta (Elevation) (deg) ' )
-        xlabel('Time (s)')
-        legend('When Visible', 'Entire Duration')
-    end
-else
-    for k = 1 : num_gs
-        string = gs_names{k};
-        figure
-        subplot(3,1,1)
-        plot ((1:time_period),RAE_sat(1,:,k),'.b');
-        title ({string;'Range (m)'})
-        
-        subplot(3,1,2)
-        plot ((1:time_period),RAE_sat(2,:,k),'.b');
-        title ('Azimuth (deg)')
-        
-        subplot(3,1,3)
-        plot ((1:time_period),RAE_sat(3,:,k),'.b');
-        title ( 'Theta (Elevation) (deg) ' )
-        xlabel('Time (s)')
-    end
+for k = 1 : num_gs
+    string = gs_names{k};
+    figure
+    subplot(3,1,1)
+    plot ((1:time_period),RAE_sat(1,:,k),'.b');
+    title ({string;'Range (m)'})
+
+    subplot(3,1,2)
+    plot ((1:time_period),RAE_sat(2,:,k),'.b');
+    title ('Azimuth (deg)')
+
+    subplot(3,1,3)
+    plot ((1:time_period),RAE_sat(3,:,k),'.b');
+    title ( 'Theta (Elevation) (deg) ' )
+    xlabel('Time (s)')
 end
 
 %% Add Tracking Errors to Readings
@@ -169,17 +130,11 @@ gain = 1;
 range_error = gain*0.01; %10mm error
 angle_error = gain*1/3600;   %1 arc second error
 
-for t = 1 : time_period
-    for k = 1 : num_gs
-%         range(k,t) = RAE_sat(1,t,k); + range_error*(-1 + rand);
-%         azimuth(k,t) = RAE_sat(2,t,k); + angle_error*(-1 + rand);
-%         elevation(k,t) = RAE_sat(3,t,k) + angle_error*(-1 + rand);
-
 %use gaussian errors
-        range(k,t) = normrnd(RAE_sat(1,t,k), range_error);
-        azimuth(k,t) = normrnd(RAE_sat(2,t,k), angle_error);
-        elevation(k,t) = normrnd(RAE_sat(3,t,k), angle_error);
-    end
+for k = 1:num_gs
+range(k,:) = normrnd(RAE_sat(1,:,k), range_error);
+azimuth(k,:) = normrnd(RAE_sat(2,:,k), angle_error);
+elevation(k,:) = normrnd(RAE_sat(3,:,k), angle_error);
 end
 
 %% Initial Estimate of R_ECI and V_ECI
@@ -194,6 +149,9 @@ store_init_guess = NaN(6,num_gs);
 for k = 1 : num_gs
     % Take the first 3 observations from each station with real values
     indexes(k,:) = find(not(isnan(azimuth(k,:))),3);
+    
+    %get time of second measurement for each ground station
+    time2(k) = indexes(k,2);
     
     %Uses Herricks Gibbs to estimate the velocity using ECI measurements
     %and to also return the ECI position corresponding to the velocity
@@ -230,14 +188,15 @@ end
 
 %% Get Estimated ECI Orbit using orbital parameters from NLLS for a useful ground station
 %some will fail to converge and give NaN so use one that is good.
+global gs_num
 for k = 1:num_gs
-    if not(isnan(nlls_orbit(k,1)));
+    if not(isnan(nlls_orbit(k,1)))
         gs_num = k;
         disp(['Using Ground Station: ' gs_names{k}]);
         break;
     end
 end
- 
+
 a_est = nlls_orbit(gs_num,1);
 e_est = nlls_orbit(gs_num,2);
 i_est = nlls_orbit(gs_num,3);
@@ -245,25 +204,75 @@ Omega_est = nlls_orbit(gs_num,4);
 omega_est = nlls_orbit(gs_num,5);
 M_est = nlls_orbit(gs_num,6);
 
-%time of observation from herrick's gibbs
-global time2
+ff = -404;   %offset to sync estimated and real ECI values 
+ff = -401;
 
-%get estimated eci orbit
+disp(time2(gs_num))
+
+tafterepoch = time2(gs_num);
+% Need mean anomaly at the time at which herricks gibbs was taken
+mu = 3.986005e14;
+n = sqrt(mu/(orbit_params(1,1))^3);
+MeanAnomaly = orbit_params(1,6) + n*(time2(gs_num));
+
+[ECI_sat2(:,:),ECI_sat_vel2(:,:)] = Orbit_to_ECI_and_Simulate(orbit_params(k,1),orbit_params(k,2),orbit_params(k,3),...
+    orbit_params(k,4),orbit_params(k,5),MeanAnomaly,...
+    tafterepoch,time_period);
+
+%get estimated eci orbit from NLLS estimation of a single ground station
 ECI_est = Orbit_to_ECI_and_Simulate(a_est,e_est,i_est,Omega_est,omega_est,...
-    M_est,time2,time_period);
+    M_est,(time2(gs_num)),time_period);
+%% error plots
 
-%convert estimated ECI orbit to ECEF
-% Get ECEF coordinates of ALL satellites over 24 hour period
+% get error for the specified satellite
+error_a = a_est - orbit_params(1);   %in m
+error_e = e_est - orbit_params(2);
+error_i = i_est - orbit_params(3);
+error_Omega = Omega_est - orbit_params(4);
+error_omega = omega_est - orbit_params(5);
+error_M = M_est - orbit_params(6);
+
+params_error = [error_a, error_e, error_i, error_Omega, error_omega, error_M];
+
+error = NaN(time_period,1);
+t_offset = time2(gs_num)+ff;
+
+for t = 1:time_period
+    dx = ECI_est(1,t) - ECI_sat2(1,t);
+    dy = ECI_est(2,t) - ECI_sat2(2,t);
+    dz = ECI_est(3,t) - ECI_sat2(3,t);
+    error(t) = sqrt(dx^2 + dy^2 + dz^2);
+end
+
+figure
+plot(1:time_period,error)
+xlabel('Time (seconds)')
+ylabel('Position Error (m)')
+title('Position Error vs Time')
+
+%% Plot ECI estimated and Real X position vs time
+figure
+plot(1:time_period,ECI_est(1,:),'r')
+hold on
+plot(1:time_period,ECI_sat2(1,:),'b')
+legend('Estimated X Position','Real X Position')
+title('ECI X position vs Time')
+xlabel('Time (seconds)')
+ylabel('Position (m)')
+
+%% convert estimated ECI orbit to ECEF
+% Get ECEF and LGCV coordinates from the ECI coordinates
 for t = 1:step:time_period
     current_time = time_epoch + t;    %time since last epoch for time = n
     % Time since the last equinox, for ECEF coordinate calculation
     tsinceequinox = (current_time - julian_date17);
     % Get the ECEF coordinates of all satellites at this specific time
     ECEF_est(:,t) = ECI_to_ECEF([ECI_sat(:,t,j);tsinceequinox]);
+    % Get ECEF coordinates wrt the chosen ground station
+    LGCV_est(:,t) = ECEF_to_LGCV(gs_llh(gs_num,1), gs_llh(gs_num,2), gs_llh(gs_num,3),...
+        ECEF_sat(1,t), ECEF_sat(2,t), ECEF_sat(3,t));
 end
 
-output1 = ECEF_sat;
-output2 = ECEF_est;
 %% Plot ECI estimated and real over 24h
 % plot the 3D ECI Orbits from the 1st ground measurement
 
@@ -273,3 +282,12 @@ plot3(ECI_sat(1,:,sat_num),ECI_sat(2,:,sat_num),ECI_sat(3,:,sat_num),'b')
 hold on
 plot3(ECI_est(1,:),ECI_est(2,:),ECI_est(3,:),'r.')
 legend('Earth','Real Orbit','Estimated Orbit')
+
+%% Output variables
+%Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est
+Sat_ECI_true = ECI_sat;
+Sat_ECEF_true = ECEF_sat(:,:,gs_num);
+Sat_ECI_est = ECI_est;
+Sat_ECEF_est = ECEF_est;
+
+%end
