@@ -101,23 +101,37 @@ for t = 1:step:time_period
 end
 
 %% Plot the RAE of each satellite when visible and all RAE
-% issue with step because if step ~= 1 the plot for all RAE wont show
-for k = 1 : num_gs
-    string = gs_names{k};
-    figure
-    subplot(3,1,1)
-    plot ((1:time_period),RAE_sat(1,:,k),'.b');
-    title ({string;'Range (m)'})
+figure
+subplot(3,1,1)
+plot ((1:time_period),RAE_sat(1,:,1),'.b');
+hold on
+plot ((1:time_period),RAE_sat(1,:,2),'.r');
+hold on
+plot ((1:time_period),RAE_sat(1,:,3),'.g');
+legend('Adelaide, South Australia','Hermitage, UK','Cape Caneveral, Florida' )
+title('Elevation vs Time')
+xlabel('Time (seconds)')
+ylabel('Range (m)')
 
-    subplot(3,1,2)
-    plot ((1:time_period),RAE_sat(2,:,k),'.b');
-    title ('Azimuth (deg)')
+subplot(3,1,2)
+plot ((1:time_period),RAE_sat(2,:,1),'.b');
+hold on
+plot ((1:time_period),RAE_sat(2,:,2),'.r');
+hold on
+plot ((1:time_period),RAE_sat(2,:,3),'.g');
+title('Azimuth vs Time')
+xlabel('Time (seconds)')
+ylabel('Azimuth (deg)')
 
-    subplot(3,1,3)
-    plot ((1:time_period),RAE_sat(3,:,k),'.b');
-    title ( 'Theta (Elevation) (deg) ' )
-    xlabel('Time (s)')
-end
+subplot(3,1,3)
+plot ((1:time_period),RAE_sat(3,:,1),'.b');
+hold on
+plot ((1:time_period),RAE_sat(3,:,2),'.r');
+hold on
+plot ((1:time_period),RAE_sat(3,:,3),'.g');
+title('Elevation vs Time')
+xlabel('Time (seconds)')
+ylabel('Elevation (deg)')
 
 %% Add Tracking Errors to Readings
 % LASER RANGING - 1arcsec precision, 5-10mm range error
