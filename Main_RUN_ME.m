@@ -82,8 +82,7 @@ zlabel('z (m)')
 % Errors
 sigma_star_yawpitch = 8.25/3/3600*deg2rad;      %1 sigma in radians
 sigma_star_roll = 11.1/3/3600*deg2rad;  %1 sigma value in radians
-sigma_mag = 0.75*deg2rad;        % in radians
-
+sigma_mag = 5;        % nT 1 sigma value
 %Preallocate for speed
 Sat_LLH_est = zeros(time_period,3);
 Mag_ECI = zeros(3,time_period);
@@ -104,8 +103,11 @@ for t = 1:step:time_period
     % Convert satellite's estimated ECEF position to est LLH
     Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
     
-    % Get unit vector of magnetometer readings with noise
+    % Get unit vector of magnetometer readings 
     Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
+    
+    % Add Errors to magnetometer readings (in nT)
+    Mag_ECI(:,t) = normrnd(Mag_ECI(:,t),sigma_mag);
     
     % Convert ECI to ECEF
     current_time = time_epoch + t;    %time since last epoch for time = n
@@ -115,6 +117,9 @@ for t = 1:step:time_period
     % Convert ECEF to LGCV wrt Satellite's position
     Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
         Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));
+    
+    % Normalise LGCV vector as only want direction
+    Mag_LGCV(t,:) = Mag_LGCV(t,:)/norm(Mag_LGCV(t,:));
     
 %     % Convert LGCV to RAE
 %     Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
@@ -178,7 +183,7 @@ weight_starY = 1;
 weight_starP = 1;
 weight_starR = 0.75;    %since error in roll is larger 
 
-weight_mag = 1e-3;
+weight_mag = 1e-4;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
 

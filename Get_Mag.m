@@ -27,13 +27,6 @@ d = [sin(th_m)*cos(alpha_m);
 %Components of the dipole model in ECI frame
 m_i = R_earth^3*H0/(norm(r_eci)^3)*3*d'*r_hat*r_hat-d;
 
-% Add Errors
-error = 0.5/100;   %1 percent error
-sigma = abs(m_i*error/3);    % 1 sigma value
-m_i(1) = normrnd(m_i(1),sigma(1));
-m_i(2) = normrnd(m_i(2),sigma(2));
-m_i(3) = normrnd(m_i(3),sigma(3));
-
-output = m_i/norm(m_i); %normalise output
+output = m_i;
 
 end
