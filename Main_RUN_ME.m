@@ -58,8 +58,8 @@ radius = 10e10;      %some big number
 inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
-num_stars = 300;
-FOV = 60*deg2rad;
+num_stars = 1000;
+FOV = 20*deg2rad;
 
 % Generate the constellation of stars
 Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
@@ -80,8 +80,9 @@ zlabel('z (m)')
 
 %% Get LGCV and Body frame coordinates
 % Errors
-sigma_star = 0.001;      % direction
-sigma_mag = 0.01;        % direction
+sigma_star_yawpitch = 8.25/3/3600*deg2rad;      %1 sigma in radians
+sigma_star_roll = 11.1/3/3600*deg2rad;  %1 sigma value in radians
+sigma_mag = 0.75*deg2rad;        % in radians
 
 %Preallocate for speed
 Sat_LLH_est = zeros(time_period,3);
@@ -137,19 +138,28 @@ for t = 1:step:time_period
     Star_LGCV(1:r,:,t) = temp;
     
     for k = 1:r
-        % Convert LGCV to RAE
-        Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
-        
-        % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-        Star_RAE(k,1,t) = Star_RAE(k,1,t);
-        Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag);
-        Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag);
-        
-        % Convert RAE with noise back to LGCV
-        Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
+%         % Convert LGCV to RAE
+%         Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
+%         
+%         % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+%         Star_RAE(k,1,t) = Star_RAE(k,1,t);
+%         Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag);
+%         Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag);
+%         
+%         % Convert RAE with noise back to LGCV
+%         Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
         
         % Convert LGCV to Body using Real Attitudes
         Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));
+        
+        % Add star tracker errors in Y,P,R
+        error_angles = [0,0,0];
+        error_angles(1) = normrnd(error_angles(1),sigma_star_yawpitch);
+        error_angles(2) = normrnd(error_angles(2),sigma_star_yawpitch);
+        error_angles(3) = normrnd(error_angles(3),sigma_star_roll);
+                
+        % Rotate body by these error angles
+        Star_Body(k,:,t) = Rotate_3D(error_angles,Star_Body(k,:,t));
     end
     
     % Progress Report
@@ -164,8 +174,11 @@ end
 % Constants
 tol = 1e-06;
 %Weights matrix same size as readings
-weight_star = 1;
-weight_mag = 0.1;
+weight_starY = 1;
+weight_starP = 1;
+weight_starR = 0.75;    %since error in roll is larger 
+
+weight_mag = 0.01;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
 
@@ -217,7 +230,7 @@ for t = 1:step:num_times
             %organise measurements
             y_meas(3*k-2:3*k,1) = Star_Body(k,:,t);
             %build diagonals of weight matrix
-            weights(3*k-2:3*k) = [weight_star, weight_star, weight_star];
+            weights(3*k-2:3*k) = [weight_starY, weight_starP, weight_starR];
         end
         
         %get delta yo
