@@ -57,11 +57,14 @@ radius = 10e10;      %some big number
 inc = orbit_params(3);
 Omega = orbit_params(4);
 omega = orbit_params(5);
-num_stars = 1000;
+num_stars = 1500;
 FOV = 20*deg2rad;
 
 % Generate the constellation of stars
-Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
+%Star_Constellation_ECI = Generate_Random_Stars(num_stars,radius);
+
+% Or load a good constellation from before
+load('1500_stars');
 
 %scale down distance of the stars for plotting
 scale = 1e3;
@@ -160,7 +163,7 @@ weight_starY = 1;
 weight_starP = 1;
 weight_starR = 0.75;    %since error in roll is larger 
 
-weight_mag = 1e-4;
+weight_mag = 1e-3;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
 
@@ -333,11 +336,19 @@ ylabel('Angle (Radians)')
 subplot(3,1,3)
 plot(1:time_period,Error_Attitude(:,1),'r.')
 title('Error Yaw')
-title('Number of Visible Stars')
+title('Error Roll')
 xlabel('Time (Seconds)')
 ylabel('Angle (Radians)')
 
 %% Calculate Nadir Point and North/East Swath Edge
+%*********************** Use Real or Estimated ECI Orbit ******************
+% 1 = use estimated eci orbit (bad plots)
+% 0 = use real orbi with artifically added errors
+UseReal = 0;
+% Modelled Orbit Determination Errors
+sigma_orbit = 200/3;      % meter 1 sigma value
+%**************************************************************************
+
 % Tracking Errors
 sigma_range_accuracy = 20/2;    %1 sigma value meters
 sigma_pointing_accuracy = 0.01*deg2rad/2; %1 sigma value in radians
@@ -396,24 +407,27 @@ for t = 1:step:time_period
     % Get the Swath Width (difference between Nadir and Swath x2)
     Swath_Edge_true(t) = 2*norm(Swath_ECEF_true(t,:) - Nadir_ECEF_true(t,:));
     
-    %% Get Estimated Nadir Point and North Swath Edge
-    % Set magnitude of ECI vector to Radius of the Earth
-    %Feature_ECI_est = Sat_ECI_est(:,t)*radius_earth/norm(Sat_ECI_est(:,t));
+    %% Get Estimated Nadir Point and North Swath Edge    
+    %***********************Use Real or Estimated Values***********************
+    if UseReal == 1
+        % Use real ECI with simulated errors
+        Sat_ECI_est(:,t) = normrnd(Sat_ECI_true(:,t),sigma_orbit);
+        
+        % Convert ECI to ECEF
+        Sat_ECEF_est = ECI_to_ECEF([Sat_ECI_est(:,t); t_since_equinox]);
     
-    %**********************************Debugging*****************************
-    % Use real ECI for Nadir Point Estimates Testing
-    Feature_ECI_est = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
+        % Convert satellite's estimated ECEF position to est LLH
+        Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1),Sat_ECEF_est(2),Sat_ECEF_est(3));
     
-    % Add Errors to ECI values to simulate noisy ground station readings
-    
-    
-    % Use real satellite LLH
-    Sat_LLH_est(t,:) = Sat_LLH_true(t,:);
+    end
     %*************************************************************************
+    
+    % Set magnitude of ECI vector to Radius of the Earth
+    Feature_ECI_est = Sat_ECI_est(:,t)*radius_earth/norm(Sat_ECI_est(:,t));
     
     % Convert ECI to ECEF
     Feature_ECEF_est = ECI_to_ECEF([Feature_ECI_est; t_since_equinox]);
-    
+       
     % Convert ECEF to LGCV wrt Satellite's position
     Feature_LGCV_est =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
         Feature_ECEF_est(1), Feature_ECEF_est(2), Feature_ECEF_est(3));
@@ -521,7 +535,6 @@ title('Swath Down Error')
 xlabel('Time (sec)')
 ylabel('Distance (m)')
 
-% Plot the swath edge
 figure
 subplot(2,1,1)
 plot(1:time_period,Swath_Edge_true,'.')
@@ -530,5 +543,6 @@ xlabel('Time (sec)')
 ylabel('Distance (m)')
 subplot(2,1,2)
 plot(1:time_period, Swath_Edge_est,'.')
+title('Swath Edge Estimated')
 xlabel('Time (sec)')
 ylabel('Distance (m)')
