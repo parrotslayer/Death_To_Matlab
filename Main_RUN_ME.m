@@ -28,8 +28,7 @@ orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1
 
 % Use code from Assignment 2 to model estimated orbit and real orbit
 [Sat_ECI_true,Sat_ECEF_true,Sat_ECI_est, Sat_ECEF_est] = Orbit_Determination(orbit_params);
-save('Orbit Determination_Data')
-
+%save('Orbit Determination_Data')
 %load('Orbit Determination_Data')
 
 
@@ -121,17 +120,6 @@ for t = 1:step:time_period
     % Normalise LGCV vector as only want direction
     Mag_LGCV(t,:) = Mag_LGCV(t,:)/norm(Mag_LGCV(t,:));
     
-%     % Convert LGCV to RAE
-%     Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
-%     
-%     % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-%     Mag_RAE(t,1) = Mag_RAE(t,1);
-%     Mag_RAE(t,2) = normrnd(Mag_RAE(t,2), sigma_mag);
-%     Mag_RAE(t,3) = normrnd(Mag_RAE(t,3), sigma_mag);
-%     
-%     % Convert RAE with noise back to LGCV
-%     Mag_LGCV(t,:) = RAE_to_LGCV(Mag_RAE);
-    
     % Convert LGCV to Body using Real angles
     Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Real(:,t)),Mag_LGCV(t,:));
     
@@ -142,18 +130,7 @@ for t = 1:step:time_period
     [r,c] = size(temp);
     Star_LGCV(1:r,:,t) = temp;
     
-    for k = 1:r
-%         % Convert LGCV to RAE
-%         Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
-%         
-%         % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-%         Star_RAE(k,1,t) = Star_RAE(k,1,t);
-%         Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag);
-%         Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag);
-%         
-%         % Convert RAE with noise back to LGCV
-%         Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
-        
+    for k = 1:r    
         % Convert LGCV to Body using Real Attitudes
         Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));
         
@@ -338,6 +315,28 @@ plot(1:time_period,num_star_readings,'k.');
 title('Number of Visible Stars')
 xlabel('Time (Seconds)')
 
+% Generate Plot of Error between real and estimated attitude
+Error_Attitude = Attitude_Real' - Attitude_est;
+figure
+subplot(3,1,1)
+plot(1:time_period,Error_Attitude(:,1),'r.')
+title('Error Roll')
+xlabel('Time (Seconds)')
+ylabel('Angle (Radians)')
+
+subplot(3,1,2)
+plot(1:time_period,Error_Attitude(:,1),'r.')
+title('Error Pitch')
+xlabel('Time (Seconds)')
+ylabel('Angle (Radians)')
+
+subplot(3,1,3)
+plot(1:time_period,Error_Attitude(:,1),'r.')
+title('Error Yaw')
+title('Number of Visible Stars')
+xlabel('Time (Seconds)')
+ylabel('Angle (Radians)')
+
 %% Calculate Nadir Point and North/East Swath Edge
 % Tracking Errors
 sigma_range_accuracy = 20/2;    %1 sigma value meters
@@ -352,6 +351,9 @@ Nadir_Error = NaN(time_period,3);
 Nadir_Error_Magnitude = NaN(time_period,1);
 Swath_Error = NaN(time_period,3);
 Swath_Error_Magnitude = NaN(time_period,1);
+Swath_Edge_true = NaN(time_period,1);
+Swath_Edge_est = NaN(time_period,1);
+
 
 for t = 1:step:time_period
     %% Get True Position of the Nadir Point and North Swath Edge
@@ -391,6 +393,9 @@ for t = 1:step:time_period
     Swath_ECEF_true(t,:) =  LGCV_to_ECEF(Sat_LLH_true(t,1),Sat_LLH_true(t,2),Sat_LLH_true(t,3),...
         Feature_LGCV_true(1), Feature_LGCV_true(2), Feature_LGCV_true(3));
     
+    % Get the Swath Width (difference between Nadir and Swath x2)
+    Swath_Edge_true(t) = 2*norm(Swath_ECEF_true(t,:) - Nadir_ECEF_true(t,:));
+    
     %% Get Estimated Nadir Point and North Swath Edge
     % Set magnitude of ECI vector to Radius of the Earth
     %Feature_ECI_est = Sat_ECI_est(:,t)*radius_earth/norm(Sat_ECI_est(:,t));
@@ -398,6 +403,10 @@ for t = 1:step:time_period
     %**********************************Debugging*****************************
     % Use real ECI for Nadir Point Estimates Testing
     Feature_ECI_est = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
+    
+    % Add Errors to ECI values to simulate noisy ground station readings
+    
+    
     % Use real satellite LLH
     Sat_LLH_est(t,:) = Sat_LLH_true(t,:);
     %*************************************************************************
@@ -450,36 +459,76 @@ for t = 1:step:time_period
     % Calculate Swath Errors
     Swath_Error(t,:) = Swath_ECEF_true(t,:) - Swath_ECEF_est(t,:);
     Swath_Error_Magnitude(t) = norm(Swath_Error(t,:));
+        
+    % Get the Swath Width (difference between Nadir and Swath x2)
+    Swath_Edge_est(t) = 2*norm(Swath_ECEF_est(t,:) - Nadir_ECEF_est(t,:));
 end
 
 %% Tracking Plots
 
 figure
-plot(1:time_period,Nadir_ECEF_true(:,1),'b');
+ax1 = subplot(2,1,1);
+plot(ax1,1:time_period,Nadir_ECEF_true(:,1),'b*');
 hold on
-plot(1:time_period,Nadir_ECEF_est(:,1),'r.');
-title('X Nadir Est vs Real')
-
-figure
+plot(ax1,1:time_period,Nadir_ECEF_est(:,1),'r.');
+title('X axis Nadir Estimated vs Real')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
+legend('Nadir True', 'Nadir Estimate')
+subplot(2,1,2)
 plot(1:time_period,Nadir_Error_Magnitude,'k.')
 title('Error Nadir Magnitude vs Time')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
 
 figure
 subplot(2,1,1)
 plot(Nadir_Error(:,1),Nadir_Error(:,2),'.');
 title('Nadir Mapping Errors')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
 subplot(2,1,2)
 plot(1:time_period,Nadir_Error(:,3),'.')
 title('Nadir Down Error')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
 
 figure
+subplot(2,1,1)
+plot(1:time_period,Swath_ECEF_true(:,1),'b*');
+hold on
+plot(1:time_period,Swath_ECEF_est(:,1),'r.');
+title('X axis Swath Estimated vs Real')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
+legend('Swath True', 'Swath Estimate')
+
+subplot(2,1,2)
 plot(1:time_period,Swath_Error_Magnitude,'k.')
 title('Error Swath Magnitude vs Time')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
 
 figure
 subplot(2,1,1)
 plot(Swath_Error(:,1),Swath_Error(:,2),'.');
 title('Swath Mapping Errors')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
 subplot(2,1,2)
 plot(1:time_period,Swath_Error(:,3),'.')
 title('Swath Down Error')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
+
+% Plot the swath edge
+figure
+subplot(2,1,1)
+plot(1:time_period,Swath_Edge_true,'.')
+title('Swath Edge True')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
+subplot(2,1,2)
+plot(1:time_period, Swath_Edge_est,'.')
+xlabel('Time (sec)')
+ylabel('Distance (m)')
