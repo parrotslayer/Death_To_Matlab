@@ -23,13 +23,7 @@ orbit_params(2)=0.0000872;                %e - eccentricity deg
 orbit_params(3)=98.7401;                  %inc - inclination degrees
 orbit_params(4)=142.1145;                 %Omega - degrees
 orbit_params(5)=25.5213;                  %omega - degrees
-
-%******************* RE calc mean anomaly ***********************
 orbit_params(6)=283.570800000000;         %Mo - Mean Anomaly at Time Given
-
-
-
-%****************************************************************
 orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1 00:00:00
 
 % Use code from Assignment 2 to model estimated orbit and real orbit
@@ -168,10 +162,10 @@ end
 
 %% Apply NLLS to Determine Attitude for each timestep
 % Constants
-tol = 0.01;
+tol = 1e-06;
 %Weights matrix same size as readings
 weight_star = 1;
-weight_mag = 1;
+weight_mag = 0.1;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
 
@@ -181,10 +175,6 @@ num_star_readings = zeros(num_times,1);
 DOP_Roll = zeros(num_times,1);
 DOP_Pitch = zeros(num_times,1);
 DOP_Yaw = zeros(num_times,1);
-
-%*************************************** TEMP ****************************
-%num_times = 10001;
-%*************************************************************************
 
 %loop for the number of times
 for t = 1:step:num_times
@@ -268,7 +258,8 @@ end
 
 %% Calculate Nadir Point and North/East Swath Edge
 % Tracking Errors
-sigma_tracking_errors = 100;    %meters
+sigma_range_accuracy = 20/2;    %1 sigma value meters
+sigma_pointing_accuracy = 0.01*deg2rad/2; %1 sigma value in radians
 
 Sat_LLH_true = NaN(time_period,3);
 Nadir_ECEF_true = NaN(time_period,3);
@@ -326,7 +317,7 @@ for t = 1:step:time_period
     % Use real ECI for Nadir Point Estimates Testing
     Feature_ECI_est = Sat_ECI_true(:,t)*radius_earth/norm(Sat_ECI_true(:,t));
     % Use real satellite LLH
-    %Sat_LLH_est(t,:) = Sat_LLH_true(t,:);
+    Sat_LLH_est(t,:) = Sat_LLH_true(t,:);
     %*************************************************************************
     
     % Convert ECI to ECEF
@@ -339,21 +330,25 @@ for t = 1:step:time_period
     % Convert LGCV to Body using estimated angles
     Feature_Body_est = LGCV_to_Body(transpose(Attitude_est(t,:)),Feature_LGCV_est');
     
-    % Add Errors to Body readings
-    Nadir_Body_est = normrnd(Feature_Body_est,sigma_tracking_errors);
+    % Add pointing errors to the Body frame coordinates
+    pointing_errors = [0,0,0];
+    pointing_errors = normrnd(pointing_errors,sigma_pointing_accuracy);
+    Feature_Body_est = Rotate_3D(pointing_errors,Feature_Body_est);
     
+    % Add ranging errors to the body readings
+    Feature_Body_est = normrnd(Feature_Body_est,sigma_pointing_accuracy);
+    
+    % CALCULATE NADIR POINT
     % Convert Body to LGCV
-    Nadir_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Nadir_Body_est);
+    Nadir_LGCV_est = Body_to_LGCV(Attitude_est(t,:),Feature_Body_est);
     
     % Convert LGCV to ECEF
     Nadir_ECEF_est(t,:) = LGCV_to_ECEF(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
         Nadir_LGCV_est(1), Nadir_LGCV_est(2), Nadir_LGCV_est(3));
     
-    % Convert LGCV to Body
-    Swath_Body_est = LGCV_to_Body(Attitude_est(t,:),Nadir_LGCV_est);
-    
+    % CALCULATE SWATH EDGE LOCATION
     % Rotate Body Frame by FOV/2 in the North Direction
-    Swath_Body_est = C_rot*Swath_Body_est';
+    Swath_Body_est = C_rot*Feature_Body_est';
     
     % Scale Body Frame by D as distance is now different
     D = Viewing_Geometry(Sat_LLH_est(t,3),FOV/2);
