@@ -104,7 +104,7 @@ for t = 1:step:time_period
     % Convert satellite's estimated ECEF position to est LLH
     Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
     
-    % Get unit vector of magnetometer readings
+    % Get unit vector of magnetometer readings with noise
     Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
     
     % Convert ECI to ECEF
@@ -116,18 +116,18 @@ for t = 1:step:time_period
     Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
         Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));
     
-    % Convert LGCV to RAE
-    Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
+%     % Convert LGCV to RAE
+%     Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
+%     
+%     % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+%     Mag_RAE(t,1) = Mag_RAE(t,1);
+%     Mag_RAE(t,2) = normrnd(Mag_RAE(t,2), sigma_mag);
+%     Mag_RAE(t,3) = normrnd(Mag_RAE(t,3), sigma_mag);
+%     
+%     % Convert RAE with noise back to LGCV
+%     Mag_LGCV(t,:) = RAE_to_LGCV(Mag_RAE);
     
-    % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-    Mag_RAE(t,1) = Mag_RAE(t,1);
-    Mag_RAE(t,2) = normrnd(Mag_RAE(t,2), sigma_mag);
-    Mag_RAE(t,3) = normrnd(Mag_RAE(t,3), sigma_mag);
-    
-    % Convert RAE with noise back to LGCV
-    Mag_LGCV(t,:) = RAE_to_LGCV(Mag_RAE);
-    
-    % Convert LGCV with noise to Body using Real angles
+    % Convert LGCV to Body using Real angles
     Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Real(:,t)),Mag_LGCV(t,:));
     
     %% Get Star Tracker Body and LGCV Readings with Noise
@@ -178,7 +178,7 @@ weight_starY = 1;
 weight_starP = 1;
 weight_starR = 0.75;    %since error in roll is larger 
 
-weight_mag = 0.01;
+weight_mag = 1e-3;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
 
@@ -268,6 +268,70 @@ for t = 1:step:num_times
         disp(t)
     end
 end
+
+%% Generate Plots of Attitude
+% Get rid of zero terms (no data because we skip steps)
+%temp = num_star_readings(time_period);
+num_star_readings(num_star_readings == 0) = NaN;
+%num_star_readings(time_period) = temp;
+Attitude_est(Attitude_est == 0) = NaN;
+
+figure
+ax1 = subplot(2,1,1);
+plot(ax1,1:time_period,Attitude_Real(1,:),'b')
+hold on
+plot(ax1,1:time_period,Attitude_est(1:time_period,1),'r.')
+title(ax1,'Unfilted Roll')
+xlabel(ax1,'Time (seconds)')
+ylabel(ax1,'Angle (Radians)')
+ax2 = subplot(2,1,2);
+plot(ax2,abs(num_star_readings),'k.');
+title(ax2,'Number Visible Stars')
+xlabel(ax2,'Time (seconds)')
+ylabel(ax2,'Number of Stars')
+
+figure
+subplot(2,1,1)
+plot(1:time_period,Attitude_Real(2,:),'b')
+hold on
+plot(1:time_period,Attitude_est(1:time_period,2),'r.')
+title('Unfilted Pitch')
+xlabel('Time (seconds)')
+ylabel('Angle (Radians)')
+subplot(2,1,2)
+plot(abs(num_star_readings),'k.');
+title('Number Visible Stars')
+xlabel('Time (seconds)')
+ylabel('Number of Stars')
+
+figure
+subplot(2,1,1)
+plot(1:time_period,Attitude_Real(3,:),'b')
+hold on
+plot(1:time_period,Attitude_est(1:time_period,3),'r.')
+title('Unfilted Yaw')
+xlabel('Time (seconds)')
+ylabel('Angle (Radians)')
+subplot(2,1,2)
+plot(abs(num_star_readings),'k.');
+title('Number Visible Stars')
+xlabel('Time (seconds)')
+ylabel('Number of Satellites')
+
+figure
+subplot(4,1,1)
+plot(1:time_period,DOP_Roll)
+title('DOP Roll')
+subplot(4,1,2)
+plot(1:time_period,DOP_Pitch)
+title('DOP Pitch')
+subplot(4,1,3)
+plot(1:time_period,DOP_Yaw)
+title('DOP Yaw')
+subplot(4,1,4)
+plot(1:time_period,num_star_readings,'k.');
+title('Number of Visible Stars')
+xlabel('Time (Seconds)')
 
 %% Calculate Nadir Point and North/East Swath Edge
 % Tracking Errors
@@ -414,67 +478,3 @@ title('Swath Mapping Errors')
 subplot(2,1,2)
 plot(1:time_period,Swath_Error(:,3),'.')
 title('Swath Down Error')
-
-%% Generate Plots of Attitude
-% Get rid of zero terms (no data because we skip steps)
-%temp = num_star_readings(time_period);
-num_star_readings(num_star_readings == 0) = NaN;
-%num_star_readings(time_period) = temp;
-Attitude_est(Attitude_est == 0) = NaN;
-
-figure
-ax1 = subplot(2,1,1);
-plot(ax1,1:time_period,Attitude_Real(1,:),'b')
-hold on
-plot(ax1,1:time_period,Attitude_est(1:time_period,1),'r.')
-title(ax1,'Unfilted Roll')
-xlabel(ax1,'Time (seconds)')
-ylabel(ax1,'Angle (Radians)')
-ax2 = subplot(2,1,2);
-plot(ax2,abs(num_star_readings),'k.');
-title(ax2,'Number Visible Stars')
-xlabel(ax2,'Time (seconds)')
-ylabel(ax2,'Number of Stars')
-
-figure
-subplot(2,1,1)
-plot(1:time_period,Attitude_Real(2,:),'b')
-hold on
-plot(1:time_period,Attitude_est(1:time_period,2),'r.')
-title('Unfilted Pitch')
-xlabel('Time (seconds)')
-ylabel('Angle (Radians)')
-subplot(2,1,2)
-plot(abs(num_star_readings),'k.');
-title('Number Visible Stars')
-xlabel('Time (seconds)')
-ylabel('Number of Stars')
-
-figure
-subplot(2,1,1)
-plot(1:time_period,Attitude_Real(3,:),'b')
-hold on
-plot(1:time_period,Attitude_est(1:time_period,3),'r.')
-title('Unfilted Yaw')
-xlabel('Time (seconds)')
-ylabel('Angle (Radians)')
-subplot(2,1,2)
-plot(abs(num_star_readings),'k.');
-title('Number Visible Stars')
-xlabel('Time (seconds)')
-ylabel('Number of Satellites')
-
-figure
-subplot(4,1,1)
-plot(1:time_period,DOP_Roll)
-title('DOP Roll')
-subplot(4,1,2)
-plot(1:time_period,DOP_Pitch)
-title('DOP Pitch')
-subplot(4,1,3)
-plot(1:time_period,DOP_Yaw)
-title('DOP Yaw')
-subplot(4,1,4)
-plot(1:time_period,num_star_readings,'k.');
-title('Number of Visible Stars')
-xlabel('Time (Seconds)')
