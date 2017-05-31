@@ -82,7 +82,7 @@ zlabel('z (m)')
 % Errors
 sigma_star_yawpitch = 8.25/3/3600*deg2rad;      %1 sigma in radians
 sigma_star_roll = 11.1/3/3600*deg2rad;  %1 sigma value in radians
-sigma_mag = 0.75*deg2rad;        % in radians
+sigma_mag = 0.1*deg2rad/3;        % 1 sigma in radians
 
 %Preallocate for speed
 Sat_LLH_est = zeros(time_period,3);
@@ -115,20 +115,29 @@ for t = 1:step:time_period
     % Convert ECEF to LGCV wrt Satellite's position
     Mag_LGCV(t,:) =  ECEF_to_LGCV(Sat_LLH_est(t,1),Sat_LLH_est(t,2),Sat_LLH_est(t,3),...
         Mag_ECEF(t,1), Mag_ECEF(t,2), Mag_ECEF(t,3));
+
+    % Convert LGCV to Body using Real angles
+    Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Real(:,t)),Mag_LGCV(t,:));
     
-    % Convert LGCV to RAE
-    Mag_RAE(t,:) = LGCV_to_RAE(Mag_LGCV(t,:));
+    % Convert Body to RAE
+    Mag_RAE(t,:) = Cart_to_Polar(Mag_Body(t,:));
     
-    % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+    % Add noise to RAE 
     Mag_RAE(t,1) = Mag_RAE(t,1);
     Mag_RAE(t,2) = normrnd(Mag_RAE(t,2), sigma_mag);
     Mag_RAE(t,3) = normrnd(Mag_RAE(t,3), sigma_mag);
     
-    % Convert RAE with noise back to LGCV
-    Mag_LGCV(t,:) = RAE_to_LGCV(Mag_RAE);
+    % Convert RAE with noise back to Body
+    Mag_Body(t,:) = Cart_to_Polar(Mag_RAE);
     
-    % Convert LGCV with noise to Body using Real angles
-    Mag_Body(t,:) = LGCV_to_Body(transpose(Attitude_Real(:,t)),Mag_LGCV(t,:));
+%     % Add magnetometer tracker errors in Y,P,R
+%     error_angles = [0,0,0];
+%     error_angles(1) = normrnd(error_angles(1),sigma_mag);
+%     error_angles(2) = normrnd(error_angles(2),sigma_mag);
+%     error_angles(3) = normrnd(error_angles(3),sigma_mag);
+% 
+%     % Rotate body by these error angles
+%     Mag_Body(t,:) = Rotate_3D(error_angles,Mag_Body(t,:));
     
     %% Get Star Tracker Body and LGCV Readings with Noise
     % Get unit vectors from the star trackers
@@ -138,33 +147,33 @@ for t = 1:step:time_period
     Star_LGCV(1:r,:,t) = temp;
     
     for k = 1:r
-%         % Convert LGCV to RAE
-%         Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
-%         
-%         % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
-%         Star_RAE(k,1,t) = Star_RAE(k,1,t);
-%         Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag);
-%         Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag);
-%         
-%         % Convert RAE with noise back to LGCV
-%         Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
-        
-        % Convert LGCV to Body using Real Attitudes
+                % Convert LGCV to Body using Real Attitudes
         Star_Body(k,:,t) = LGCV_to_Body(Attitude_Real(:,t),Star_LGCV(k,:,t));
         
-        % Add star tracker errors in Y,P,R
-        error_angles = [0,0,0];
-        error_angles(1) = normrnd(error_angles(1),sigma_star_yawpitch);
-        error_angles(2) = normrnd(error_angles(2),sigma_star_yawpitch);
-        error_angles(3) = normrnd(error_angles(3),sigma_star_roll);
-                
-        % Rotate body by these error angles
-        Star_Body(k,:,t) = Rotate_3D(error_angles,Star_Body(k,:,t));
+        % Convert LGCV to RAE
+        Star_RAE(k,:,t) = LGCV_to_RAE(Star_LGCV(k,:,t));
+        
+        % Add noise to RAE (Use rand because is faster than normrnd Gaussian Noise)
+        Star_RAE(k,1,t) = Star_RAE(k,1,t);
+        Star_RAE(k,2,t) = normrnd(Mag_RAE(t,2), sigma_mag);
+        Star_RAE(k,3,t) = normrnd(Mag_RAE(t,3), sigma_mag);
+        
+        % Convert RAE with noise back to LGCV
+        Star_LGCV(k,:,t) = RAE_to_LGCV(Star_RAE(k,:,t));
+        
+%         % Add star tracker errors in Y,P,R
+%         error_angles = [0,0,0];
+%         error_angles(1) = normrnd(error_angles(1),sigma_star_yawpitch);
+%         error_angles(2) = normrnd(error_angles(2),sigma_star_yawpitch);
+%         error_angles(3) = normrnd(error_angles(3),sigma_star_roll);
+%                 
+%         % Rotate body by these error angles
+%         Star_Body(k,:,t) = Rotate_3D(error_angles,Star_Body(k,:,t));
     end
     
     % Progress Report
     if t == 10001 || t==20001 ||t==30001||t==40001||t==50001||t==60001||t==70001||t==80001
-        disp('Frame Conversion Timestep = ')
+        disp('Measurement Generation Timestep = ')
         disp(t)
     end
     
@@ -175,10 +184,10 @@ end
 tol = 1e-06;
 %Weights matrix same size as readings
 weight_starY = 1;
-weight_starY = 1;
-weight_starY = 1;
+weight_starP = 1;
+weight_starR = 1;    %since error in roll is larger 
 
-weight_mag = 0.01;
+weight_mag = 0.001;
 %find number of star readings, includes X,Y,Z
 [r,c,num_times] = size(Star_LGCV);
 
