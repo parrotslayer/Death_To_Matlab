@@ -33,7 +33,7 @@ orbit_params(7)=2457866.50000000;         %Julian Day (Epoch) Sunday 23/4/17 UT1
 
 
 %% Simulate the Attitude
-step = 100;
+step = 50;
 t = 1:time_period;   %generate times
 omega1 = 0.0005;     %freq of pitch
 omega2 = 0.001;     %freq of yaw
@@ -266,9 +266,10 @@ ax1 = subplot(2,1,1);
 plot(ax1,1:time_period,Attitude_Real(1,:),'b')
 hold on
 plot(ax1,1:time_period,Attitude_est(1:time_period,1),'r.')
-title(ax1,'Unfilted Roll')
+title(ax1,'Roll')
 xlabel(ax1,'Time (seconds)')
 ylabel(ax1,'Angle (Radians)')
+legend('Real','Estimated')
 ax2 = subplot(2,1,2);
 plot(ax2,abs(num_star_readings),'k.');
 title(ax2,'Number Visible Stars')
@@ -280,9 +281,10 @@ subplot(2,1,1)
 plot(1:time_period,Attitude_Real(2,:),'b')
 hold on
 plot(1:time_period,Attitude_est(1:time_period,2),'r.')
-title('Unfilted Pitch')
+title('Pitch')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
+legend('Real','Estimated')
 subplot(2,1,2)
 plot(abs(num_star_readings),'k.');
 title('Number Visible Stars')
@@ -294,9 +296,10 @@ subplot(2,1,1)
 plot(1:time_period,Attitude_Real(3,:),'b')
 hold on
 plot(1:time_period,Attitude_est(1:time_period,3),'r.')
-title('Unfilted Yaw')
+title('Yaw')
 xlabel('Time (seconds)')
 ylabel('Angle (Radians)')
+legend('Real','Estimated')
 subplot(2,1,2)
 plot(abs(num_star_readings),'k.');
 title('Number Visible Stars')
@@ -346,7 +349,7 @@ ylabel('Angle (Radians)')
 % 0 = use real orbi with artifically added errors
 UseReal = 1;
 % Modelled Orbit Determination Errors
-sigma_orbit = 200/3;      % meter 1 sigma value
+sigma_orbit = 40/3;      % meters 1 sigma value
 %**************************************************************************
 
 % Tracking Errors
@@ -394,7 +397,7 @@ for t = 1:step:time_period
     Feature_Body_true = LGCV_to_Body(Attitude_Real(:,t),Feature_LGCV_true');
     
     % Rotate Body Frame by FOV/2 in the North Direction
-    th = FOV/2;
+    th = FOV_tracking/2;
     C_rot = [cos(th) 0 -sin(th);
         0 1 0;
         sin(th) 0 cos(th)];
@@ -486,7 +489,7 @@ for t = 1:step:time_period
     Swath_Width_est(t) = 2*norm(Swath_ECEF_est(t,:) - Nadir_ECEF_est(t,:));
 end
 
-%% Tracking Plots and Statistical Data
+% Tracking Plots and Statistical Data
 % print nadir errors
 Mean_nadir_x = mean(Nadir_Error(:,1),'omitnan');
 SD_nadir_x = std(Nadir_Error(:,1),'omitnan');
@@ -510,12 +513,12 @@ SD_swath_z = std(Swath_Error(:,3),'omitnan');
 disp(['Down Swath Error: Mean = ',num2str(Mean_swath_z),', 2 Sigma Value = ',num2str(2*SD_swath_z),' meters'])
 
 % print swath width
-Mean_swath_width_true = mean(Swath_Width_true,'omitnan');
-SD_swath_width_true = std(Swath_Width_true,'omitnan');
-disp(['Swath Width: Mean = ',num2str(Mean_swath_width_true),', 2 Sigma Value = ',num2str(2*SD_swath_width_true),' meters'])
+Mean_swath_width_true = mean(Swath_Width_true,'omitnan')/1000; %km
+SD_swath_width_true = std(Swath_Width_true,'omitnan')/1000; %km
+disp(['Swath Width True: Mean = ',num2str(Mean_swath_width_true),', 2 Sigma Value = ',num2str(2*SD_swath_width_true),' km'])
 Mean_swath_width_est = mean(Swath_Width_est,'omitnan')/1000;    %km
 SD_swath_width_est = std(Swath_Width_est,'omitnan')/1000;       %km
-disp(['Swath Width: Mean = ',num2str(Mean_swath_width_est),', 2 Sigma Value = ',num2str(2*SD_swath_width_est),' km'])
+disp(['Swath Width Estimated: Mean = ',num2str(Mean_swath_width_est),', 2 Sigma Value = ',num2str(2*SD_swath_width_est),' km'])
 
 figure
 ax1 = subplot(2,1,1);
