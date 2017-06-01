@@ -261,6 +261,17 @@ num_star_readings(num_star_readings == 0) = NaN;
 %num_star_readings(time_period) = temp;
 Attitude_est(Attitude_est == 0) = NaN;
 
+Mean_roll = mean(Error_Attitude(:,1),'omitnan');
+SD_roll = std(Error_Attitude(:,1),'omitnan');
+disp(['Roll Error: Mean = ',num2str(Mean_roll),', 2 Sigma Value = ',num2str(2*SD_roll),' radians'])
+Mean_pitch = mean(Error_Attitude(:,2),'omitnan');
+SD_pitch = std(Error_Attitude(:,2),'omitnan');
+disp(['Pitch Error: Mean = ',num2str(Mean_pitch),', 2 Sigma Value = ',num2str(2*SD_pitch),' radians'])
+Mean_yaw = mean(Error_Attitude(:,3),'omitnan');
+SD_yaw = std(Error_Attitude(:,3),'omitnan');
+disp(['Yaw Error: Mean = ',num2str(Mean_yaw),', 2 Sigma Value = ',num2str(2*SD_yaw),' radians'])
+
+
 figure
 ax1 = subplot(2,1,1);
 plot(ax1,1:time_period,Attitude_Real(1,:),'b')
@@ -331,13 +342,13 @@ xlabel('Time (Seconds)')
 ylabel('Angle (Radians)')
 
 subplot(3,1,2)
-plot(1:time_period,Error_Attitude(:,1),'r.')
+plot(1:time_period,Error_Attitude(:,2),'r.')
 title('Error Pitch')
 xlabel('Time (Seconds)')
 ylabel('Angle (Radians)')
 
 subplot(3,1,3)
-plot(1:time_period,Error_Attitude(:,1),'r.')
+plot(1:time_period,Error_Attitude(:,3),'r.')
 title('Error Yaw')
 title('Error Roll')
 xlabel('Time (Seconds)')
