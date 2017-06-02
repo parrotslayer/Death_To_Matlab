@@ -85,6 +85,7 @@ zlabel('z (m)')
 sigma_star_yawpitch = 8.25/3/3600*deg2rad;      %1 sigma in radians
 sigma_star_roll = 11.1/3/3600*deg2rad;  %1 sigma value in radians
 sigma_mag = 5;        % nT 1 sigma value
+
 %Preallocate for speed
 Sat_LLH_est = zeros(time_period,3);
 Mag_ECI = zeros(3,time_period);
@@ -105,7 +106,7 @@ for t = 1:step:time_period
     % Convert satellite's estimated ECEF position to est LLH
     Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
     
-    % Get unit vector of magnetometer readings 
+    % Get vector of magnetometer readings in nT
     Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
     
     % Add Errors to magnetometer readings (in nT)
@@ -139,9 +140,9 @@ for t = 1:step:time_period
         
         % Add star tracker errors in Y,P,R
         error_angles = [0,0,0];
-        error_angles(1) = normrnd(error_angles(1),sigma_star_yawpitch);
+        error_angles(1) = normrnd(error_angles(1),sigma_star_roll);
         error_angles(2) = normrnd(error_angles(2),sigma_star_yawpitch);
-        error_angles(3) = normrnd(error_angles(3),sigma_star_roll);
+        error_angles(3) = normrnd(error_angles(3),sigma_star_yawpitch);
                 
         % Rotate body by these error angles
         Star_Body(k,:,t) = Rotate_3D(error_angles,Star_Body(k,:,t));
@@ -353,7 +354,6 @@ ylabel('Angle (Radians)')
 subplot(3,1,3)
 plot(1:time_period,Error_Attitude(:,3),'r.')
 title('Error Yaw')
-title('Error Roll')
 xlabel('Time (Seconds)')
 ylabel('Angle (Radians)')
 
@@ -361,7 +361,7 @@ ylabel('Angle (Radians)')
 %*********************** Use Real or Estimated ECI Orbit ******************
 % 1 = use estimated eci orbit (bad plots)
 % 0 = use real orbi with artifically added errors
-UseReal = 0;
+UseReal = 1;
 % Modelled Orbit Determination Errors
 sigma_orbit = 40/3;      % meters 1 sigma value
 %**************************************************************************
