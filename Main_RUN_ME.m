@@ -42,7 +42,7 @@ omega2 = 0.001;     %freq of yaw
 amplitude_attitude = 10;    %degrees
 yaw = 0*t;
 pitch = amplitude_attitude*deg2rad*sin(omega1*t);
-roll =  amplitude_attitude*deg2rad*sin(omega2*t);
+roll =  amplitude_attitude*deg2rad*sin(omega2*t) ;
 
 Attitude_Real = [roll;pitch;yaw];
 
@@ -105,7 +105,7 @@ for t = 1:step:time_period
     % Convert satellite's estimated ECEF position to est LLH
     Sat_LLH_est(t,:) = ECEF_to_LLH(Sat_ECEF_est(1,t),Sat_ECEF_est(2,t),Sat_ECEF_est(3,t));
     
-    % Get unit vector of magnetometer readings 
+    % Get vector of magnetometer readings in nT
     Mag_ECI(:,t) = Get_Mag(t,th_g0, Sat_ECI_est(:,t));
     
     % Add Errors to magnetometer readings (in nT)
@@ -254,12 +254,16 @@ for t = 1:step:num_times
     end
 end
 
-%% Generate Plots of Attitude
+% Generate Plots of Attitude
+
 % Get rid of zero terms (no data because we skip steps)
 %temp = num_star_readings(time_period);
 num_star_readings(num_star_readings == 0) = NaN;
 %num_star_readings(time_period) = temp;
 Attitude_est(Attitude_est == 0) = NaN;
+
+% Calculate error in attitude
+Error_Attitude = Attitude_Real' - Attitude_est;
 
 Mean_roll = mean(Error_Attitude(:,1),'omitnan');
 SD_roll = std(Error_Attitude(:,1),'omitnan');
@@ -333,7 +337,6 @@ title('Number of Visible Stars')
 xlabel('Time (Seconds)')
 
 % Generate Plot of Error between real and estimated attitude
-Error_Attitude = Attitude_Real' - Attitude_est;
 figure
 subplot(3,1,1)
 plot(1:time_period,Error_Attitude(:,1),'r.')
@@ -358,7 +361,7 @@ ylabel('Angle (Radians)')
 %*********************** Use Real or Estimated ECI Orbit ******************
 % 1 = use estimated eci orbit (bad plots)
 % 0 = use real orbi with artifically added errors
-UseReal = 1;
+UseReal = 0;
 % Modelled Orbit Determination Errors
 sigma_orbit = 40/3;      % meters 1 sigma value
 %**************************************************************************
@@ -366,10 +369,6 @@ sigma_orbit = 40/3;      % meters 1 sigma value
 % Tracking Errors
 sigma_range_accuracy = 20/2;    %1 sigma value meters
 sigma_pointing_accuracy = 0.01*deg2rad/2; %1 sigma value in radians
-
-% sigma_range_accuracy = 0;    %1 sigma value meters
-% sigma_pointing_accuracy = 0;
-% sigma_orbit = 0;      % meter 1 sigma value
 
 % FOV of tracking sensor
 FOV_tracking = 14.5403*deg2rad; %in radians
@@ -501,6 +500,7 @@ for t = 1:step:time_period
 end
 
 % Tracking Plots and Statistical Data
+
 % print nadir errors
 Mean_nadir_x = mean(Nadir_Error(:,1),'omitnan');
 SD_nadir_x = std(Nadir_Error(:,1),'omitnan');

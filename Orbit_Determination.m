@@ -109,7 +109,7 @@ plot ((1:time_period),RAE_sat(1,:,2),'.r');
 hold on
 plot ((1:time_period),RAE_sat(1,:,3),'.g');
 legend('Adelaide, South Australia','Hermitage, UK','Cape Caneveral, Florida' )
-title('Elevation vs Time')
+title('Range vs Time')
 xlabel('Time (seconds)')
 ylabel('Range (m)')
 
