@@ -10,11 +10,11 @@ point_coordinates =   [11.4179  103.1400
    31.7231  105.9109;
    31.8653   36.9388];
 
-k = 3;
+k = 2;
 
-[idx,d] = knnsearch(point_coordinates, point_coordinates, 'k', k + 1);
-idx = idx(:,2:k+1)
-d = d(:,2:k+1)
+[idx,d] = knnsearch(point_coordinates, point_coordinates, 'k', k + 1)
+idx = idx(:,2);
+d = d(:,2);
 
-%idx = idx(:,2);
-%d = d(:,2);
+idx = idx(:,2)
+d = d(:,2)

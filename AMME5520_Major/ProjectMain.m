@@ -61,6 +61,7 @@ plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
 hold off
 
 %% Students add code here for planning
+
 % - Students to modify ComputePath, to include collision checker, PRM, and
 % path planner.
 
@@ -70,16 +71,23 @@ Width = 300;
 Height = 150;
 %Ass(:,:,k)
 %cs{k}
+starting_point = [250,120];
+ending_point = [100,80];
 
 %****************************** FUNCTON BEGINS **************************
 params = ComputePath(Ass,cs);
 
-G = zeros(N,2); %pre-allocate for speed
+G = NaN(N,2); %pre-allocate for speed
+Distances = NaN(N); % pre-allocate for speed
+
 [r,c,num_obs] = size(Ass);  %get number of obstacles
-i = 0;  %counter
-K = 2;  %number of nearest nodes to connect to
-while i < N
-    
+i = 2;  %counter starts at 2 because have start and finish point already
+K = 3;  %number of nearest nodes to connect to
+% Init G with the start and ending points
+G(1,:) = starting_point;
+G(2,:) = ending_point;
+
+while i < N 
     % generate a random point alpha = [X, Y]
     alpha(1) = rand*Width;
     alpha(2) = rand*Height;
@@ -99,21 +107,52 @@ while i < N
     if obs_hit == 0
         %increment counter i
         i = i+1;
-        % add alpha to G
+        % add alpha to the last row of G
         G(i,:) = alpha;
+        
         % Try to connect to K nearest nodes
-        if i > K
-            %Find K nearest nodes
-            disp('Find Nearest Nodes and Check')
-            %Check if through obstacle
+        
+        %Find K nearest nodes
+        disp('Current Node = ')
+        disp(i)
+        
+        % Use KNNsearch to find closest distance to K nodes
+        [idx,d] = knnsearch(G, G, 'k', K + 1);
+        % idx returns the row number of the node
+        idx = idx(:,2:K+1);
+        % d is the euclidian distance arraged from shortest -> longest
+        d = d(:,2:K+1);
+        
+        %disp(idx)
+        %disp(d)
+        
+        %for each neighbour
+        for j = 1:K
+            %Check if alpha goes through an obstacle
+            point1 = alpha;
+            % ending point is the jth closest neighbour to alpha
+            point2 = G(idx(i,j),:);
+            % Check if path crosses between an obstacle
+            obs_hit = 0;
+            for k = 1:num_obs
+                % see if there is a hit
+                hit = CheckCollision(point1,point2,Ass(:,:,k),cs{k});
+                % if there is a hit exit checking obstacles
+                if hit == 1
+                    obs_hit = 1;
+                    break
+                end
+            end
             
-            %If node clear
-            
-            %Add q to G
-            
-            
-        end % end i > K connecting to nearest nodes
-                
+            % if the path between alpha and neightbours are clear
+            if obs_hit == 0
+                % add the path to q/Distances if not exists
+                Distances(idx(i,j),i) = d(i,j);
+            end %end obs_hit == 0
+
+        end % end for 1:K for each neightbour
+        
+        
     end %end if obs_hit
     
     %i = N;

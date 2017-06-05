@@ -35,14 +35,14 @@ for k = 1:numObst
     tmp = rand(2,1);
     cs{k} = [leftlim+(rightlim-leftlim)*tmp(1);dimensions(3)+(dimensions(4)-dimensions(3))*tmp(2)];
     
-%     As{k} = [0.0289, 0.0036; 0.0036, 0.0052];
-%     cs{k} = [170.3786;100.7861];
+    %     As{k} = [0.0289, 0.0036; 0.0036, 0.0052];
+    %     cs{k} = [170.3786;100.7861];
     
     %Add offset to ellipse, is proportional
     Ass(:,:,k) = As{k};
     Ass(1,1,k) = Ass(1,1,k) + Ass(1,1,k)*(buffer);
     Ass(1,2,k) = Ass(1,2,k) + Ass(1,2,k)*(buffer);
-    Ass(2,1,k) = Ass(2,1,k) + Ass(2,1,k)*(buffer);   
+    Ass(2,1,k) = Ass(2,1,k) + Ass(2,1,k)*(buffer);
     Ass(2,2,k) = Ass(2,2,k) + Ass(2,2,k)*(buffer);
     
     Ellipse_plot(As{k},cs{k});
@@ -74,6 +74,7 @@ Height = 150;
 %****************************** FUNCTON BEGINS **************************
 params = ComputePath(Ass,cs);
 
+G = NaN(N,2); %pre-allocate for speed
 [r,c,num_obs] = size(Ass);  %get number of obstacles
 i = 0;  %counter
 K = 2;  %number of nearest nodes to connect to
@@ -96,28 +97,57 @@ while i < N
     end
     
     if obs_hit == 0
-    %increment counter i
-            i = i+1;
-            % add alpha to G
-            G(i,:) = alpha;
-            % Try to connect to K nearest nodes
-            if i > K
-                %Find K nearest nodes
-                disp('Find Nearest Nodes and Check')
-                %Check if through obstacle
-                
+        %increment counter i
+        i = i+1;
+        % add alpha to the last row of G
+        G(i,:) = alpha;
+        
+        % Try to connect to K nearest nodes
+        if i > K
+            %Find K nearest nodes
+            disp('Current Node = ')
+            disp(i)
+            
+            % Use KNNsearch to find closest distance to K nodes
+            [idx,dist] = knnsearch(G, G, 'k', K + 1);
+            % idx returns the row number of the node
+            idx = idx(:,2:K+1);
+            % d is the euclidian distance arraged from shortest -> longest
+            dist = dist(:,2:K+1);
+            
+            %for each neighbour
+            for j = 1:K
+                %Check if alpha goes through an obstacle
+                starting_point = alpha;
+                % ending point is the jth closest neighbour to alpha
+                ending_point = idx(i,j);
+                % Check if path crosses between an obstacle
+                obs_hit = 0;
+                for k = 1:num_obs
+                    % see if there is a hit
+                    hit = CheckCollision(starting_point,ending_point,Ass(:,:,k),cs{k});
+                    % if there is a hit
+                    if hit == 1
+                        obs_hit = 1;
+                        break
+                    end
+                end
+
+                % if the path between alpha and neightbours are clear
+                if obs_hit == 0
+                    % add the path to q
+                end %end obs_hit == 0
                 %If node clear
                 
                 %Add q to G
-                
-                
-            end % end i > K connecting to nearest nodes
-                
+            end % end for 1:K for each neightbour
             
-        end %end hit
-    end %end for loop
-    %i = N;        
-end    
+        end % end i > K connecting to nearest nodes
+                
+    end %end if obs_hit
+    
+    %i = N;
+end
 
 % Plot Ellipses, Nodes and Paths
 figure
@@ -126,7 +156,9 @@ Ellipse_plot(Ass(:,:,k),cs{k});
 hold on
 plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
 plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
-
+hold on
+% Node G = [X, Y]
+plot(G(:,1),G(:,2),'b.')
 
 title('Compute Path')
 

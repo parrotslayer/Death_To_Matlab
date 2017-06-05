@@ -3,7 +3,7 @@ function hit = CheckCollision(vec1,vec2,A,c)
 % hit = 1 if the line from x1 to x2 hits the ellipse (x-c)'A(x-c)<=1.
 % hit = 0 otherwise (i.e. path is safe)
 
-res = 1000; %number of points to divide up the line
+res = 10; %number of points to divide up the line
 hit = 0;
 
 x1 = vec1(1);
