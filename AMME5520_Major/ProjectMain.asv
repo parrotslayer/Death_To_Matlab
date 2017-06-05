@@ -23,7 +23,7 @@ dimensions = [0 Width 0 Height];
 leftlim = 0.2*(dimensions(2)-dimensions(1));
 rightlim = 0.8*(dimensions(2)-dimensions(1));
 
-buffer = 0.5;    %buffer zone in percent
+buffer = 0.4;    %buffer zone in percent
 % Points in form [X,Y]
 starting_point = [250,120];
 ending_point = [100,120];
@@ -71,6 +71,8 @@ hold off
 
 %****************************** Input Variables *************************
 N = 100; %number of points/nodes required
+K = 3;  %number of nearest nodes to connect to
+
 Width = 300;
 Height = 150;
 %Ass(:,:,k)
@@ -78,9 +80,9 @@ Height = 150;
 starting_point = [250,120];
 ending_point = [100,80];
 
-%****************************** FUNCTON BEGINS **************************
+%****************************** FUNCTION BEGINS **************************
 % Constants and variables init
-params = ComputePath(Ass,cs);
+params = ComputePath(N,K,Width,Height,Ass);
 
 G = NaN(N,2); %pre-allocate for speed
 Distances = NaN(N); % pre-allocate for speed
@@ -88,7 +90,7 @@ num_lines = 0;
 
 [r,c,num_obs] = size(Ass);  %get number of obstacles
 i = 2;  %counter starts at 2 because have start and finish point already
-K = 3;  %number of nearest nodes to connect to
+
 
 drawrealtime = 1;
 
@@ -176,16 +178,17 @@ while i < N
             if obs_hit == 0
                 % add the path to q/Distances if not exists
                 Distances(idx(i,j),i) = d(i,j);
+                Distances(i,idx(i,j)) = d(i,j);
                 % Plot the lines/path
                 
                 if drawrealtime == 1
-                    X = [point1(1),point2(1)];
-                    Y = [point1(2),point2(2)];
-                    plot(X,Y,'k');
+                    X_realtime = [point1(1),point2(1)];
+                    Y_realtime = [point1(2),point2(2)];
+                    plot(X_realtime,Y_realtime,'k');
                     hold on
                     drawnow
                 else
-                    if isnan(point1) ~= 1 && norm(isnan(point2)) ~= 1
+                    if isnan(point1(1)) ~= 1 && isnan(point2(1)) ~= 1
                         num_lines = num_lines + 1;
                         X_lines(num_lines,:) = [point1(1),point2(1)];
                         Y_lines(num_lines,:) = [point1(2),point2(2)];
@@ -206,14 +209,26 @@ if drawrealtime == 0
     plot(G(:,1),G(:,2),'b.')
     hold on
     for j = 1:num_lines
-        plot(X_lines(num_lines,:),Y_lines(num_lines,:),'k')
+        plot(X_lines(j,:),Y_lines(j,:),'k')
         hold on
     end
 end
 
 %***************************** END **************************************
-
-
+%% Run Dijkstra
+[min_dist, shortest_path] = Dijkstra_Path(Distances,1,2);
+% Plot shortest path in red
+[r,num_paths] = size(shortest_path);
+for j = 1:num_paths-1
+    point1 = G(shortest_path(j),:);
+    point2 = G(shortest_path(j+1),:);
+    X_realtime = [point1(1),point2(1)];
+    Y_realtime = [point1(2),point2(2)];
+    plot(X_realtime,Y_realtime,'r','linewidth',2);
+    plot(point1(1),point1(2),'ro')
+    plot(point2(1),point2(2),'ro')
+    hold on
+end
 %% Simulate Closed-loop system
 % students to modify functions
 

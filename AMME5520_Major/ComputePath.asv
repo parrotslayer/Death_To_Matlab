@@ -1,4 +1,4 @@
-function [min_dist, shortest_path] = ComputePath(N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point)
+function [min_dist, shortest_path] = ComputePath(N,K,Width,Height,Ass,cs,starting_point,ending_point)
 % Constants and variables init
 
 G = NaN(N,2); %pre-allocate for speed
