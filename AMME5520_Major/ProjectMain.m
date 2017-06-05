@@ -70,7 +70,9 @@ hold off
 % path planner.
 
 %****************************** Input Variables *************************
-N = 100; %number of points/nodes required
+N = 7; %number of points/nodes required
+K = 3;  %number of nearest nodes to connect to
+
 Width = 300;
 Height = 150;
 %Ass(:,:,k)
@@ -88,7 +90,7 @@ num_lines = 0;
 
 [r,c,num_obs] = size(Ass);  %get number of obstacles
 i = 2;  %counter starts at 2 because have start and finish point already
-K = 3;  %number of nearest nodes to connect to
+
 
 drawrealtime = 0;
 
@@ -176,6 +178,7 @@ while i < N
             if obs_hit == 0
                 % add the path to q/Distances if not exists
                 Distances(idx(i,j),i) = d(i,j);
+                Distances(i,idx(i,j)) = d(i,j);
                 % Plot the lines/path
                 
                 if drawrealtime == 1
