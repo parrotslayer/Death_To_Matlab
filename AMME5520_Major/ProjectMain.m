@@ -23,7 +23,7 @@ dimensions = [0 Width 0 Height];
 leftlim = 0.2*(dimensions(2)-dimensions(1));
 rightlim = 0.8*(dimensions(2)-dimensions(1));
 
-buffer = 0.5;    %buffer zone in percent
+buffer = 0.4;    %buffer zone in percent
 % Points in form [X,Y]
 starting_point = [250,120];
 ending_point = [100,120];
@@ -70,7 +70,7 @@ hold off
 % path planner.
 
 %****************************** Input Variables *************************
-N = 7; %number of points/nodes required
+N = 100; %number of points/nodes required
 K = 3;  %number of nearest nodes to connect to
 
 Width = 300;
@@ -92,7 +92,7 @@ num_lines = 0;
 i = 2;  %counter starts at 2 because have start and finish point already
 
 
-drawrealtime = 0;
+drawrealtime = 1;
 
 %Init G with the start and ending points
 G(1,:) = starting_point;
@@ -215,8 +215,20 @@ if drawrealtime == 0
 end
 
 %***************************** END **************************************
-
-
+%% Run Dijkstra
+[min_dist, shortest_path] = Dijkstra_Path(Distances,1,2);
+% Plot shortest path in red
+[r,num_paths] = size(shortest_path);
+for j = 1:num_paths-1
+    point1 = G(shortest_path(j),:);
+    point2 = G(shortest_path(j+1),:);
+    X_realtime = [point1(1),point2(1)];
+    Y_realtime = [point1(2),point2(2)];
+    plot(X_realtime,Y_realtime,'r','linewidth',2);
+    plot(point1(1),point1(2),'ro')
+    plot(point2(1),point2(2),'ro')
+    hold on
+end
 %% Simulate Closed-loop system
 % students to modify functions
 
