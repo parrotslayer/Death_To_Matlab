@@ -75,8 +75,6 @@ K = 3;  %number of nearest nodes to connect to
 
 Width = 300;
 Height = 150;
-%Ass(:,:,k)
-%cs{k}
 starting_point = [250,120];
 ending_point = [100,80];
 
