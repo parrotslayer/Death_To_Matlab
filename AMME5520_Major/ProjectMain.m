@@ -9,8 +9,8 @@ Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 1; % Control the number of obstacles, e.g. 10, 20, 30, 40.
-Adim = 30; % Control the "average" size of the obstacles.
+numObst = 3; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+Adim = 15; % Control the "average" size of the obstacles.
 
 As = cell(numObst,1);
 cs = cell(numObst,1);
@@ -38,24 +38,21 @@ for k = 1:numObst
     tmp = rand(2,1);
     cs{k} = [leftlim+(rightlim-leftlim)*tmp(1);dimensions(3)+(dimensions(4)-dimensions(3))*tmp(2)];
     
-         As{k} = [0.0289, 0.0036; 0.0036, 0.0052];
-         cs{k} = [170.3786;100.7861];
+       %  As{k} = [0.0289, 0.0036; 0.0036, 0.0052];
+       %  cs{k} = [170.3786;100.7861];
     
     %Add offset to ellipse, is proportional
     Ass(:,:,k) = As{k};
-    Ass(1,1,k) = Ass(1,1,k)*0.4;
-    Ass(1,2,k) = Ass(1,2,k)*0.4;
-    Ass(2,1,k) = Ass(2,1,k)*0.4;
-    Ass(2,2,k) = Ass(2,2,k)*0.4;
+    Ass(1,1,k) = Ass(1,1,k)*buffer;
+    Ass(1,2,k) = Ass(1,2,k)*buffer;
+    Ass(2,1,k) = Ass(2,1,k)*buffer;
+    Ass(2,2,k) = Ass(2,2,k)*buffer;
            
     Ellipse_plot(As{k},cs{k},'b');
     Ellipse_plot(Ass(:,:,k),cs{k},'r');
+    hold on
     
     hit = CheckCollision(starting_point,ending_point,Ass(:,:,k),cs{k});
-    disp(hit);
-    disp('hit using no edge')
-    hit = CheckCollision(starting_point,ending_point,As{k},cs{k})
-
     
 end
 X = [starting_point(1),ending_point(1)];
@@ -73,7 +70,7 @@ hold off
 % path planner.
 
 %****************************** Input Variables *************************
-N = 10; %number of points/nodes required
+N = 100; %number of points/nodes required
 Width = 300;
 Height = 150;
 %Ass(:,:,k)
@@ -85,8 +82,8 @@ ending_point = [100,80];
 % Plot Ellipses, Nodes and Paths
 figure
 for k = 1:numObst
-Ellipse_plot(As{k},cs{k});
-Ellipse_plot(Ass(:,:,k),cs{k});
+Ellipse_plot(As{k},cs{k},'b');
+Ellipse_plot(Ass(:,:,k),cs{k},'r');
 hold on
 end
 plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
@@ -101,7 +98,7 @@ Distances = NaN(N); % pre-allocate for speed
 
 [r,c,num_obs] = size(Ass);  %get number of obstacles
 i = 2;  %counter starts at 2 because have start and finish point already
-K = 3;  %number of nearest nodes to connect to
+K = 2;  %number of nearest nodes to connect to
 % Init G with the start and ending points
 G(1,:) = starting_point;
 G(2,:) = ending_point;
@@ -130,7 +127,7 @@ while i < N
         G(i,:) = alpha;
         
         % Plot this new point
-        plot(G(1:i-1,1),G(1:i-1,2),'b.')
+        plot(G(1:i,1),G(1:i,2),'b.')
         hold on
         title(sprintf('PRM Generation: Node %d',i))
         drawnow
@@ -171,6 +168,13 @@ while i < N
             if obs_hit == 0
                 % add the path to q/Distances if not exists
                 Distances(idx(i,j),i) = d(i,j);
+                % Plot the lines/path
+                
+                X = [point1(1),point2(1)];
+                Y = [point1(2),point2(2)];
+                plot(X,Y,'k');
+                drawnow
+                
             end %end obs_hit == 0
 
         end % end for 1:K for each neightbour
@@ -180,12 +184,6 @@ while i < N
     
     %i = N;
 end
-
-
-% Node G = [X, Y]
-plot(G(:,1),G(:,2),'b.')
-
-title('Compute Path')
 
 %***************************** END **************************************
 
