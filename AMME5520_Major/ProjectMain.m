@@ -79,6 +79,23 @@ starting_point = [250,120];
 ending_point = [100,80];
 
 %****************************** FUNCTON BEGINS **************************
+% Constants and variables init
+params = ComputePath(Ass,cs);
+
+G = NaN(N,2); %pre-allocate for speed
+Distances = NaN(N); % pre-allocate for speed
+num_lines = 0;
+
+[r,c,num_obs] = size(Ass);  %get number of obstacles
+i = 2;  %counter starts at 2 because have start and finish point already
+K = 3;  %number of nearest nodes to connect to
+
+drawrealtime = 0;
+
+%Init G with the start and ending points
+G(1,:) = starting_point;
+G(2,:) = ending_point;
+
 % Plot Ellipses, Nodes and Paths
 figure
 for k = 1:numObst
@@ -88,21 +105,11 @@ hold on
 end
 plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
 plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
+plot(G(1,1),G(1,2),'ro')
+plot(G(2,1),G(2,2),'ro')
 hold on
 
-% Constants and variables init
-params = ComputePath(Ass,cs);
-
-G = NaN(N,2); %pre-allocate for speed
-Distances = NaN(N); % pre-allocate for speed
-
-[r,c,num_obs] = size(Ass);  %get number of obstacles
-i = 2;  %counter starts at 2 because have start and finish point already
-K = 2;  %number of nearest nodes to connect to
-% Init G with the start and ending points
-G(1,:) = starting_point;
-G(2,:) = ending_point;
-
+% Begin PRM
 while i < N 
     % generate a random point alpha = [X, Y]
     alpha(1) = rand*Width;
@@ -127,11 +134,12 @@ while i < N
         G(i,:) = alpha;
         
         % Plot this new point
-        plot(G(1:i,1),G(1:i,2),'b.')
-        hold on
-        title(sprintf('PRM Generation: Node %d',i))
-        drawnow
-        
+        if drawrealtime == 1
+            plot(G(i,1),G(i,2),'b.')
+            hold on
+            title(sprintf('PRM Generation: Node %d',i))
+            drawnow
+        end
         %Find K nearest nodes
         %disp('Current Node = ')
         %disp(i)
@@ -170,10 +178,19 @@ while i < N
                 Distances(idx(i,j),i) = d(i,j);
                 % Plot the lines/path
                 
-                X = [point1(1),point2(1)];
-                Y = [point1(2),point2(2)];
-                plot(X,Y,'k');
-                drawnow
+                if drawrealtime == 1
+                    X_realtime = [point1(1),point2(1)];
+                    Y_realtime = [point1(2),point2(2)];
+                    plot(X_realtime,Y_realtime,'k');
+                    hold on
+                    drawnow
+                else
+                    if isnan(point1(1)) ~= 1 && isnan(point2(1)) ~= 1
+                        num_lines = num_lines + 1;
+                        X_lines(num_lines,:) = [point1(1),point2(1)];
+                        Y_lines(num_lines,:) = [point1(2),point2(2)];
+                    end
+                end
                 
             end %end obs_hit == 0
 
@@ -183,6 +200,15 @@ while i < N
     end %end if obs_hit
     
     %i = N;
+end
+
+if drawrealtime == 0
+    plot(G(:,1),G(:,2),'b.')
+    hold on
+    for j = 1:num_lines
+        plot(X_lines(j,:),Y_lines(j,:),'k')
+        hold on
+    end
 end
 
 %***************************** END **************************************
