@@ -9,8 +9,8 @@ Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 3; % Control the number of obstacles, e.g. 10, 20, 30, 40.
-Adim = 15; % Control the "average" size of the obstacles.
+numObst = 1; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+Adim = 30; % Control the "average" size of the obstacles.
 
 As = cell(numObst,1);
 cs = cell(numObst,1);
@@ -26,7 +26,10 @@ rightlim = 0.8*(dimensions(2)-dimensions(1));
 buffer = 0.5;    %buffer zone in percent
 % Points in form [X,Y]
 starting_point = [250,120];
-ending_point = [100,80];
+ending_point = [100,120];
+
+% starting_point = [250,101];
+% ending_point = [100,101];
 
 for k = 1:numObst
     % Generate ellipse in the form (x-c)'A(x-c)=1
@@ -35,21 +38,24 @@ for k = 1:numObst
     tmp = rand(2,1);
     cs{k} = [leftlim+(rightlim-leftlim)*tmp(1);dimensions(3)+(dimensions(4)-dimensions(3))*tmp(2)];
     
-    %     As{k} = [0.0289, 0.0036; 0.0036, 0.0052];
-    %     cs{k} = [170.3786;100.7861];
+         As{k} = [0.0289, 0.0036; 0.0036, 0.0052];
+         cs{k} = [170.3786;100.7861];
     
     %Add offset to ellipse, is proportional
     Ass(:,:,k) = As{k};
-    Ass(1,1,k) = Ass(1,1,k) + Ass(1,1,k)*(buffer);
-    Ass(1,2,k) = Ass(1,2,k) + Ass(1,2,k)*(buffer);
-    Ass(2,1,k) = Ass(2,1,k) + Ass(2,1,k)*(buffer);
-    Ass(2,2,k) = Ass(2,2,k) + Ass(2,2,k)*(buffer);
-    
-    Ellipse_plot(As{k},cs{k});
-    Ellipse_plot(Ass(:,:,k),cs{k});
+    Ass(1,1,k) = Ass(1,1,k)*0.4;
+    Ass(1,2,k) = Ass(1,2,k)*0.4;
+    Ass(2,1,k) = Ass(2,1,k)*0.4;
+    Ass(2,2,k) = Ass(2,2,k)*0.4;
+           
+    Ellipse_plot(As{k},cs{k},'b');
+    Ellipse_plot(Ass(:,:,k),cs{k},'r');
     
     hit = CheckCollision(starting_point,ending_point,Ass(:,:,k),cs{k});
     disp(hit);
+    disp('hit using no edge')
+    hit = CheckCollision(starting_point,ending_point,As{k},cs{k})
+
     
 end
 X = [starting_point(1),ending_point(1)];
@@ -59,6 +65,7 @@ hold on
 plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
 plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
 hold off
+
 
 %% Students add code here for planning
 
@@ -75,6 +82,18 @@ starting_point = [250,120];
 ending_point = [100,80];
 
 %****************************** FUNCTON BEGINS **************************
+% Plot Ellipses, Nodes and Paths
+figure
+for k = 1:numObst
+Ellipse_plot(As{k},cs{k});
+Ellipse_plot(Ass(:,:,k),cs{k});
+hold on
+end
+plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
+plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
+hold on
+
+% Constants and variables init
 params = ComputePath(Ass,cs);
 
 G = NaN(N,2); %pre-allocate for speed
@@ -110,11 +129,15 @@ while i < N
         % add alpha to the last row of G
         G(i,:) = alpha;
         
-        % Try to connect to K nearest nodes
+        % Plot this new point
+        plot(G(1:i-1,1),G(1:i-1,2),'b.')
+        hold on
+        title(sprintf('PRM Generation: Node %d',i))
+        drawnow
         
         %Find K nearest nodes
-        disp('Current Node = ')
-        disp(i)
+        %disp('Current Node = ')
+        %disp(i)
         
         % Use KNNsearch to find closest distance to K nodes
         [idx,d] = knnsearch(G, G, 'k', K + 1);
@@ -158,14 +181,7 @@ while i < N
     %i = N;
 end
 
-% Plot Ellipses, Nodes and Paths
-figure
-Ellipse_plot(As{k},cs{k});
-Ellipse_plot(Ass(:,:,k),cs{k});
-hold on
-plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
-plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
-hold on
+
 % Node G = [X, Y]
 plot(G(:,1),G(:,2),'b.')
 
