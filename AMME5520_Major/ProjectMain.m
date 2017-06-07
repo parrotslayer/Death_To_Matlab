@@ -9,7 +9,7 @@ Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 3; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+numObst = 15; % Control the number of obstacles, e.g. 10, 20, 30, 40.
 Adim = 15; % Control the "average" size of the obstacles.
 
 As = cell(numObst,1);
@@ -23,7 +23,7 @@ dimensions = [0 Width 0 Height];
 leftlim = 0.2*(dimensions(2)-dimensions(1));
 rightlim = 0.8*(dimensions(2)-dimensions(1));
 
-buffer = 0.4;    %buffer zone in percent
+buffer = 0.8;    %buffer zone in percent
 % Points in form [X,Y]
 starting_point = [250,120];
 ending_point = [100,120];
@@ -43,11 +43,8 @@ for k = 1:numObst
     
     %Add offset to ellipse, is proportional
     Ass(:,:,k) = As{k};
-    Ass(1,1,k) = Ass(1,1,k)*buffer;
-    Ass(1,2,k) = Ass(1,2,k)*buffer;
-    Ass(2,1,k) = Ass(2,1,k)*buffer;
-    Ass(2,2,k) = Ass(2,2,k)*buffer;
-           
+    Ass(:,:,k) = Ass(:,:,k)*buffer;
+    
     Ellipse_plot(As{k},cs{k},'b');
     Ellipse_plot(Ass(:,:,k),cs{k},'r');
     hold on
@@ -70,7 +67,8 @@ hold off
 % path planner.
 
 %****************************** Input Variables *************************
-N = 100; %number of points/nodes required
+drawrealtime = 0;
+N = 200; %number of points/nodes required
 K = 3;  %number of nearest nodes to connect to
 
 Width = 300;
@@ -80,7 +78,7 @@ ending_point = [100,80];
 
 %****************************** FUNCTION BEGINS **************************
 % Constants and variables init
-[min_dist, shortest_path] = ComputePath(N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point)
+[min_dist, shortest_path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point)
 
 
 %% Simulate Closed-loop system
@@ -106,7 +104,6 @@ while (stop ~= 1)
     % Get current measurement, compute control.
     yt = meas(xt);
     [ut, params] = ComputeControl(yt,params);
-    
     
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.

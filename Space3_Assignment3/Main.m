@@ -361,7 +361,7 @@ ylabel('Angle (Radians)')
 %*********************** Use Real or Estimated ECI Orbit ******************
 % 1 = use estimated eci orbit (bad plots)
 % 0 = use real orbi with artifically added errors
-UseReal = 1;
+UseReal = 0;
 % Modelled Orbit Determination Errors
 sigma_orbit = 40/3;      % meters 1 sigma value
 %**************************************************************************

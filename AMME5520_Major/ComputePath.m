@@ -1,4 +1,4 @@
-function [min_dist, shortest_path] = ComputePath(N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point)
+function [min_dist, shortest_path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point)
 % Constants and variables init
 
 G = NaN(N,2); %pre-allocate for speed
@@ -7,8 +7,6 @@ num_lines = 0;
 
 [r,c,num_obs] = size(Ass);  %get number of obstacles
 i = 2;  %counter starts at 2 because have start and finish point already
-
-drawrealtime = 1;
 
 %Init G with the start and ending points
 G(1,:) = starting_point;
