@@ -3,24 +3,24 @@ function [ xdot ] = QuadDynamics(xt,ut,t, dynparams)
 %clc 
 %clear all
 %%%%%%%%%%%% INPUTS ***********************
-m = 0.612;  %kg
-g = 9.81;
-L = 0.3;      %m length of copter
-I = 3.03e-3;    %kgm^2
-freq = 100; %Hz
-delta_T = 1/freq;   % seconds
-
-% Current State
-xt = [10,10,10,0.5,0.5,0.5,10,10];
-
-% Control Input
-ut = [m*g/2, m*g/2];
-
-% Current Time
-t = 0;
-
-% The parameters
-dynparams = [m,g,L,I,freq];
+% m = 0.612;  %kg
+% g = 9.81;
+% L = 0.3;      %m length of copter
+% I = 3.03e-3;    %kgm^2
+% freq = 100; %Hz
+% delta_T = 1/freq;   % seconds
+% 
+% % Current State
+% xt = [10,10,10,0.5,0.5,0.5,10,10];
+% 
+% % Control Input
+% ut = [m*g/2, m*g/2];
+% 
+% % Current Time
+% t = 0;
+% 
+% % The parameters
+% dynparams = [m,g,L,I,freq];
 %***********************************************
 
 % Give variables useful names
@@ -28,6 +28,7 @@ m = dynparams(1);
 g = dynparams(2);
 L = dynparams(3);
 I = dynparams(4);
+freq = dynparams(5);
 r1 = ut(1);
 r2 = ut(2);
 x = xt(1);

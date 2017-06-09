@@ -128,7 +128,7 @@ for j = 1:num_paths-1
     point1 = G(shortest_path(j),:);
     point2 = G(shortest_path(j+1),:);
     % Store these points into a variable
-    shortest_path_coordinates(j,:) = [point1, point2];
+    shortest_path_coordinates(j,:) = [point1, point 2]
     X_realtime = [point1(1),point2(1)];
     Y_realtime = [point1(2),point2(2)];
     plot(X_realtime,Y_realtime,'r','linewidth',2);
@@ -137,4 +137,10 @@ for j = 1:num_paths-1
     hold on
 end
 
+%% Generate Array of Path Coordinates
+
+for j = 1:num_paths-1
+    
+end
+shortest_path_coordinates = 0;
 end

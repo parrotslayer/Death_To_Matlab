@@ -77,21 +77,16 @@ found = 0;
 Path = ending;
 x = ending;
 while found == 0
-    try
-        i = i + 1;
-        steps = steps + 1;
-        Path(i) = Pi(x);
-        x = Pi(x);
-        if x == start
-            found = 1;
-        end
-    % if the obstacles are in bad places no possible solution    
-    catch
-        disp('Warning: Could Not Find Path Solution!')
-        disp('Check Start and Destination Positions do not lie within an obstacle')
-        error('Daijkstra Path Finding Has Failed!')
-        
+    i = i + 1;
+    steps = steps + 1;
+    Path(i) = Pi(x);
+    x = Pi(x);
+    if x == start
+        found = 1;
     end
+    
+    if steps > 1000
+        err
 end
 Path = rot90(Path,2);
 disp(['Shortest Path = ' num2str(Path)]);

@@ -78,7 +78,7 @@ h = 0.01; % 100Hz sample time. Modify as desired.
 velocity = 50;   %m/s constant speed of the drone
 
 x0 = zeros(8,1);  %Initial condition.
-x0(1:2) = starting_point;
+x0(1) = s
 
 stop = 0;
 ts = 0;
@@ -96,7 +96,7 @@ delta_T = 1/freq;   % seconds
 xt = x0;
 
 % Control Input
-ut = [m*g/2; m*g/2];    %set initial values to hover at equillibrium
+ut = [m*g/2, m*g/2];    %set initial values to hover at equillibrium
 
 % Reference Control Input
 u0 = [m*g/2; m*g/2];
@@ -110,7 +110,7 @@ desired_XY = discretise_path(velocity, delta_T, shortest_path_coordinates);
 
 % Build X Desired matrix
 X_desired = zeros(num_steps,8);
-X_desired(:,1:2) = desired_XY;
+X_desired(:,1:2) = desired_XY
 
 k = 1;
 while (stop ~= 1)
@@ -121,7 +121,7 @@ while (stop ~= 1)
     % Get current measurement, compute control.
     yt = meas(xt);
     
-    [ut, dynparams] = ComputeControl(u0, xt, X_desired(k,:)', dynparams);
+    [ut, dynparams] = ComputeControl(u0, xt, X_desired(k,:), dynparams);
     
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
@@ -142,4 +142,3 @@ end
 figure
 plot(xs(1,:),xs(2,:))
 
-disp('done')
