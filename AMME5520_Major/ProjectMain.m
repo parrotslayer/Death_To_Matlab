@@ -78,7 +78,7 @@ ending_point = [100,80];
 
 %****************************** FUNCTION BEGINS **************************
 % Constants and variables init
-[min_dist, shortest_path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point)
+%[min_dist, shortest_path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point)
 
 
 %% Simulate Closed-loop system
@@ -93,8 +93,23 @@ ts = 0;
 xs = x0;
 
 % This variable can be used to collect any parameters for simulation
-dynparams = []
+m = 0.612;  %kg
+g = 9.81;
+L = 0.3;      %m length of copter
+I = 3.03e-3;    %kgm^2
+freq = 100; %Hz
+delta_T = 1/freq;   % seconds
 
+% Current State
+xt = [10,10,10,0.5,0.5,0.5,10,10];
+
+% Control Input
+ut = [m*g/2, m*g/2];
+
+% The parameters
+dynparams = [m,g,L,I,freq];
+
+% Discretise Curve
 
 k = 1;
 while (stop ~= 1)
@@ -103,7 +118,8 @@ while (stop ~= 1)
     
     % Get current measurement, compute control.
     yt = meas(xt);
-    [ut, params] = ComputeControl(yt,params);
+    
+    [ut, dynparams] = ComputeControl(yt,dynparams);
     
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
@@ -112,12 +128,14 @@ while (stop ~= 1)
     ts(k+1) = ts(k)+h;
     us(:,k) = ut;
     
-    if (k>100)
+    if (k>1000)
         stop = 1;  % Stop after 100 time steps. You will need to change this.
         % Should stop after goal reached or collision.
     end
     k = k+1;
 end
 
-
+%% plot
+figure
+plot(xs(1,:),xs(2,:))
 

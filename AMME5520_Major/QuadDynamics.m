@@ -1,7 +1,7 @@
-%function [ xdot ] = QuadDynamics(xt,ut,t, dynparams)
+function [ xdot ] = QuadDynamics(xt,ut,t, dynparams)
 % Dynamics stub for AMME5520 Assignment 2. Students to fill in.
-clc 
-clear all
+%clc 
+%clear all
 %%%%%%%%%%%% INPUTS ***********************
 m = 0.612;  %kg
 g = 9.81;
@@ -41,24 +41,33 @@ T2 = xt(8);
 
 delta_T = 1/freq;   % seconds
 
-% Get K controller using code from Assignment 1
-% The model is linearised about the equillibirum
-K = LQR_Get_K();
+T1_d_new = 2*r1 - 2*T1;
+T2_d_new = 2*r2 - 2*T2;
 
-disp(K)
+% integrate T1_d to get T1 using 1st order Taylor Series
+T1_new = T1 + delta_T*T1_d_new;
+T2_new = T2 + delta_T*T2_d_new;
 
-x_dd = 1/m*( (T1+T2)*sin(th) );
-y_dd = 1/m*( -m*g + (T1+T2)*cos(th) );
-th_dd = 1/I*(L*(T1-T2));
-T1_d = 2*r1 - 2*T1;
-T2_d = 2*r2 - 2*T2;
+% Use new T1 and T2 to get Th''.
+th_dd_new = 1/I*(L*(T1_new-T2_new));
 
-% Integrate X'' to X' using simple 1st order
-x_d = x_d + delta_T*x_dd;
-y_d = y_d + delta_T*y_dd;
+% Get th' using new T1, T2, th''
+th_d_new = th_d + delta_T*th_dd_new;
+
+% Get th using new th'
+th_new = th + delta_T*th_d_new;
+
+% Use new T1 and T2 to get X'', Y''.
+x_dd_new = 1/m*( (T1_new + T2_new)*sin(th_new) );
+y_dd_new = 1/m*( -m*g + (T1_new + T2_new)*cos(th_new) );
+
+
+% Integrate X'' to X' using simple 1st order Taylor Barker
+x_d_new = x_d + delta_T*x_dd_new;
+y_d_new = y_d + delta_T*y_dd_new;
 
 % Output the derivative of the state vector
-xdot = [x_d, y_d, th_d, x_dd, y_dd, th_dd, T1_d, T2_d];
+xdot = [x_d_new; y_d_new; th_d_new; x_dd_new; y_dd_new; th_dd_new; T1_d_new; T2_d_new];
 
-%end
+end
 

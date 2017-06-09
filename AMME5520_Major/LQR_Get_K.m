@@ -5,12 +5,17 @@
 % workspace.
 %Then this function can be run again to give the plots and true costs.
 
-function K = LQR_Get_K()
+function K = LQR_Get_K(params)
 %% Constants from Part A
 m = 0.612;  %kg
 g = 9.81;
 L = 0.3;      %m length of copter
 I = 3.03e-3;    %kgm^2
+
+m = params(1);
+g = params(2);
+L = params(3);
+I = params(4);
 
 %% Part D - Get the K matrix
 % Defining the A Matrix 
@@ -60,8 +65,5 @@ R = [1 0;
 [K,P] = lqr(A,B,Q,R);
 
 D = 0;
-
-%print out K
-disp(K);
 
 end
