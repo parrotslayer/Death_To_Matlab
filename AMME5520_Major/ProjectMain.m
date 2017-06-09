@@ -15,8 +15,8 @@ Adim = 15; % Control the "average" size of the obstacles.
 buffer = 0.8;    %buffer zone in percent
 
 % Starting/Ending Points in form [X,Y]
-starting_point = [250,120];
-ending_point = [100,120];
+starting_point = [100,120];
+ending_point = [200,80];
 
 % Parameters for Path Planning
 drawrealtime = 0;   % do PRM showing each step (looks cool!)
@@ -75,7 +75,7 @@ hold off
 % students to modify functions
 
 h = 0.01; % 100Hz sample time. Modify as desired.
-velocity = 50;   %m/s constant speed of the drone
+velocity = 3;   %m/s constant speed of the drone
 
 x0 = zeros(8,1);  %Initial condition.
 x0(1:2) = starting_point;
@@ -111,6 +111,7 @@ desired_XY = discretise_path(velocity, delta_T, shortest_path_coordinates);
 % Build X Desired matrix
 X_desired = zeros(num_steps,8);
 X_desired(:,1:2) = desired_XY;
+X_desired(:,7:8) = m*g/2;
 
 k = 1;
 while (stop ~= 1)
@@ -131,6 +132,8 @@ while (stop ~= 1)
     us(:,k) = ut;
     
     if (k>=num_steps)
+        % if not reached, continue to try to reach?
+        
         stop = 1;  % Stop after 100 time steps. You will need to change this.
         % Should stop after goal reached or collision.
     end
@@ -138,8 +141,10 @@ while (stop ~= 1)
     k = k+1;
 end
 
-%% plot
+% Tracking Plot
 figure
-plot(xs(1,:),xs(2,:))
+plot(xs(1,:),xs(2,:),'r.')
+hold on
+plot(X_desired(:,1),X_desired(:,2),'b')
 
 disp('done')

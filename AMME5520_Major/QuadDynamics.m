@@ -29,8 +29,10 @@ g = dynparams(2);
 L = dynparams(3);
 I = dynparams(4);
 freq = dynparams(5);
+
 r1 = ut(1);
 r2 = ut(2);
+
 x = xt(1);
 y = xt(2);
 th = xt(3);
