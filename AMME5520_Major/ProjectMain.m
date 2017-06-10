@@ -10,13 +10,13 @@ Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 5; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+numObst = 15; % Control the number of obstacles, e.g. 10, 20, 30, 40.
 Adim = 15; % Control the "average" size of the obstacles.
 buffer = 0.8;    %buffer zone in percent
 
 % Starting/Ending Points in form [X,Y]
-starting_point = [0,0];
-ending_point = [300,150];
+starting_point = [0,100];
+ending_point = [250,100];
 
 % Parameters for Path Planning
 drawrealtime = 0;   % do PRM showing each step (looks cool!)
@@ -69,7 +69,7 @@ hold off
 
 % - Students to modify ComputePath, to include collision checker, PRM, and
 % path planner.
-[min_dist, shortest_path_coordinates] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
+[min_dist, path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
 
 %% Simulate Closed-loop system
 % students to modify functions
@@ -78,7 +78,7 @@ h = 0.01; % 100Hz sample time. Modify as desired.
 velocity = 3;   %m/s constant speed of the drone
 
 x0 = zeros(8,1);  %Initial condition.
-x0(1:2) = starting_point;
+x0(1:2) = path(:,1);
 
 stop = 0;
 ts = 0;
@@ -105,18 +105,8 @@ u0 = [m*g/2; m*g/2];
 dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
-X_desired = Get_Desired_X(velocity, delta_T, shortest_path_coordinates, dynparams);
-[num_steps, c] = size(X_desired);
-
-% Build X Desired matrix
-%X_desired = zeros(num_steps,8);
-%X_desired(:,1:2) = desired_XY;
-%X_desired(:,3) = velocity;
-%X_desired(:,7:8) = m*g/2;
-
-ts = zeros(1,num_steps);
-us = zeros(2,num_steps);
-
+X_desired = equalspacing(path,delta_T  *velocity,velocity);
+[~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
     
@@ -126,7 +116,7 @@ while (stop ~= 1)
     % Get current measurement, compute control.
     yt = meas(xt);
     
-    [ut, dynparams] = ComputeControl(u0, xt, X_desired(k,:)', dynparams);
+    ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
     
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
@@ -149,6 +139,6 @@ end
 figure
 plot(xs(1,:),xs(2,:),'r.')
 hold on
-plot(X_desired(:,1),X_desired(:,2),'b')
+plot(X_desired(1,:),X_desired(2,:),'b')
 
 disp('done')

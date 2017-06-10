@@ -124,11 +124,15 @@ end
 [min_dist, shortest_path] = Dijkstra_Path(Distances,1,2);
 % Plot shortest path in red
 [r,num_paths] = size(shortest_path);
+% Preallocate for speed
+shortest_path_coordinates = zeros(2,num_paths);
+shortest_path_coordinates(:,1) = starting_point;
+
 for j = 1:num_paths-1
     point1 = G(shortest_path(j),:);
     point2 = G(shortest_path(j+1),:);
     % Store these points into a variable
-    shortest_path_coordinates(j,:) = [point1, point2];
+    shortest_path_coordinates(:,j+1) = point2';
     X_realtime = [point1(1),point2(1)];
     Y_realtime = [point1(2),point2(2)];
     plot(X_realtime,Y_realtime,'r','linewidth',2);
