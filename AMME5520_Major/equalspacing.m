@@ -2,14 +2,19 @@
 % spacing = dt*vel
 % vel = velocity = 3m/s
 
-function finaloutput = equalspacing(inputxy,spacing,vel)
+function path = equalspacing(inputxy,spacing,vel, dynparams)
+m = dynparams(1);
+g = dynparams(2);
+L = dynparams(3);
+I = dynparams(4);
+freq = dynparams(5);
+
 num_points = length(inputxy(1,:));
 direction = NaN(2,num_points-1);
-output = [];
-output2 = [];
-spacedinterval = [];
+
+spaced_XY = [];
 counter = 0;
-spaceddirection = [];
+spaced_XY_dot = [];
 
 % repeat for the number of points
 for n = 1 : num_points-1
@@ -23,13 +28,21 @@ for n = 1 : num_points-1
         if X(1) > X2(1)
             X = X2;
         end
-         spacedinterval = [spacedinterval,X];
-         spaceddirection = [spaceddirection,direction(:,counter)*vel];
+         spaced_XY = [spaced_XY,X];
+         spaced_XY_dot = [spaced_XY_dot,direction(:,counter)*vel];
     end    
 end
-output2 = [spaceddirection,[0;0]];
-spacedinterval = [inputxy(:,1),spacedinterval];
-otherstates = zeros(1,length(output2(1,:)));
-thrust = ones(1,length(output2(1,:))) * 0.612 * 9.81/2;
-finaloutput = [spacedinterval;otherstates;output2;otherstates;thrust;thrust];
+
+% Add final values to position and velocity
+output2 = [spaced_XY_dot,[0;0]];
+spaced_XY = [inputxy(:,1),spaced_XY];
+
+% Create array of zeros for th, th'
+zero_states = zeros(1,length(output2(1,:)));
+
+% T1 and T2 are just mg/2
+thrust = ones(1,length(output2(1,:)))*m*g/2;
+
+% Combine arrays together
+path = [spaced_XY;zero_states;output2;zero_states;thrust;thrust];
 end

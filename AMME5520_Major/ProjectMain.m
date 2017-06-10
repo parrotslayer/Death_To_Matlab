@@ -31,6 +31,7 @@ C_kal(1,1) = 1; % X
 C_kal(2,2) = 1; % Y
 C_kal(3,3) = 1; % th
 C_kal(6,6) = 1; % th;
+C_kal = eye(8);
 
 R = zeros(8);
 sigma_X = 0.01;
@@ -44,7 +45,7 @@ R(3,3) = sigma_Th;
 R(6,6) = sigma_Th_dot;
 
 x_hat_prev = [10;10;0;0;0;0;3;3];
-P = eye(8)*1e-1;
+P = eye(8)*1e-6;
 
 %*************************************************************************%
 
@@ -114,6 +115,7 @@ delta_T = 1/freq;   % seconds
 
 % Current State
 xt = x0;
+xt_kal = x0;
 
 % Control Input
 ut = [m*g/2; m*g/2];    %set initial values to hover at equillibrium
@@ -137,12 +139,14 @@ while (stop ~= 1)
     
     ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
   
-    % Kalman filter state estimator instead of 1st line
-    [P(k+1),xt_kal] = Kalman_Filter(xs(:,k), P(k), yt, ut, C_kal, R);
-    
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
-    xs(:,k+1) = RungeKutta4(@QuadDynamics, xt_kal, ut, 0, h, dynparams);
+    % Compute xs for the next itteration. We use value from previous
+    % itteration (k) in the Kalman filter
+    xs(:,k+1) = RungeKutta4(@QuadDynamics, xt, ut, 0, h, dynparams);
+
+    % Kalman filter state estimator 
+    [P(:,:,k+1),xt_kal(:,k+1)] = Kalman_Filter(xs(:,k), P(:,:,k), yt, ut, C_kal, R);
     
     ts(k+1) = ts(k)+h;
     us(:,k) = ut;
