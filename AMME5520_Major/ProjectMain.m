@@ -19,32 +19,12 @@ starting_point = [0,100];
 ending_point = [250,100];
 
 % Parameters for Path Planning
-drawrealtime = 0;   % do PRM showing each step (looks cool!)
+drawrealtime = 1;   % do PRM showing each step (looks cool!)
 N = 200; %number of points/nodes required
 K = 3;  %number of nearest nodes to connect to
 
 % Parameters for Closed Loop Simulation
 h = 0.01; % 100Hz sample time. Modify as desired.
-
-C_kal = zeros(8);
-C_kal(1,1) = 1; % X
-C_kal(2,2) = 1; % Y
-C_kal(3,3) = 1; % th
-C_kal(6,6) = 1; % th;
-
-R = zeros(8);
-sigma_X = 0.01;
-sigma_Y = 0.01;
-sigma_Th = 0.01;
-sigma_Th_dot = 0.01;
-
-R(1,1) = sigma_X;
-R(2,2) = sigma_Y;
-R(3,3) = sigma_Th;
-R(6,6) = sigma_Th_dot;
-
-x_hat_prev = [10;10;0;0;0;0;3;3];
-P = eye(8)*1e-1;
 
 %*************************************************************************%
 
