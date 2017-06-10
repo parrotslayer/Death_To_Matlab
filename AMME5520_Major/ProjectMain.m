@@ -10,7 +10,7 @@ Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 15; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+numObst = 20; % Control the number of obstacles, e.g. 10, 20, 30, 40.
 Adim = 15; % Control the "average" size of the obstacles.
 buffer = 0.8;    %buffer zone in percent
 
@@ -19,7 +19,7 @@ starting_point = [0,100];
 ending_point = [250,100];
 
 % Parameters for Path Planning
-drawrealtime = 1;   % do PRM showing each step (looks cool!)
+drawrealtime = 0;   % do PRM showing each step (looks cool!)
 N = 200; %number of points/nodes required
 K = 3;  %number of nearest nodes to connect to
 
