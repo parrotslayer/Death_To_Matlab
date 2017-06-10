@@ -15,8 +15,8 @@ Adim = 15; % Control the "average" size of the obstacles.
 buffer = 0.8;    %buffer zone in percent
 
 % Starting/Ending Points in form [X,Y]
-starting_point = [100,120];
-ending_point = [200,80];
+starting_point = [0,0];
+ending_point = [300,150];
 
 % Parameters for Path Planning
 drawrealtime = 0;   % do PRM showing each step (looks cool!)
@@ -105,13 +105,17 @@ u0 = [m*g/2; m*g/2];
 dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
-desired_XY = discretise_path(velocity, delta_T, shortest_path_coordinates);
-[num_steps, c] = size(desired_XY);
+X_desired = Get_Desired_X(velocity, delta_T, shortest_path_coordinates, dynparams);
+[num_steps, c] = size(X_desired);
 
 % Build X Desired matrix
-X_desired = zeros(num_steps,8);
-X_desired(:,1:2) = desired_XY;
-X_desired(:,7:8) = m*g/2;
+%X_desired = zeros(num_steps,8);
+%X_desired(:,1:2) = desired_XY;
+%X_desired(:,3) = velocity;
+%X_desired(:,7:8) = m*g/2;
+
+ts = zeros(1,num_steps);
+us = zeros(2,num_steps);
 
 k = 1;
 while (stop ~= 1)
