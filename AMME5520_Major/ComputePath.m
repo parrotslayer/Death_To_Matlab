@@ -21,8 +21,8 @@ for k = 1:num_obs
 end
 plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
 plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
-plot(G(1,1),G(1,2),'ro')
-plot(G(2,1),G(2,2),'ro')
+plot(G(1,1),G(1,2),'pk','MarkerSize',10)
+plot(G(2,1),G(2,2),'pk','MarkerSize',10)
 hold on
 
 % Begin PRM
@@ -51,7 +51,7 @@ while i < N
         
         % Plot this new point
         if drawrealtime == 1
-            plot(G(i,1),G(i,2),'b.')
+            plot(G(i,1),G(i,2),'k.')
             hold on
             title(sprintf('PRM Generation: Node %d',i))
             drawnow
@@ -92,7 +92,7 @@ while i < N
                 if drawrealtime == 1
                     X_realtime = [point1(1),point2(1)];
                     Y_realtime = [point1(2),point2(2)];
-                    plot(X_realtime,Y_realtime,'k');
+                    plot(X_realtime,Y_realtime,'c');
                     hold on
                     drawnow
                 else
@@ -112,10 +112,10 @@ while i < N
 end
 
 if drawrealtime == 0
-    plot(G(:,1),G(:,2),'b.')
+    plot(G(:,1),G(:,2),'k.')
     hold on
     for j = 1:num_lines
-        plot(X_lines(j,:),Y_lines(j,:),'k')
+        plot(X_lines(j,:),Y_lines(j,:),'c')
         hold on
     end
 end
@@ -136,9 +136,15 @@ for j = 1:num_paths-1
     X_realtime = [point1(1),point2(1)];
     Y_realtime = [point1(2),point2(2)];
     plot(X_realtime,Y_realtime,'r','linewidth',2);
-    plot(point1(1),point1(2),'ro')
-    plot(point2(1),point2(2),'ro')
+    plot(point1(1),point1(2),'bo')
+    plot(point2(1),point2(2),'bo')
     hold on
 end
+plot(G(1,1),G(1,2),'pk','MarkerSize',10)
+plot(G(2,1),G(2,2),'pk','MarkerSize',10)
+title('Probabilistic Road Map with Dijkstra')
+xlabel('X axis (m)')
+ylabel('Y axis (m)')
+drawnow
 
 end

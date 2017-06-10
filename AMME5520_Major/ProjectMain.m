@@ -52,8 +52,6 @@ P = eye(8)*1e-1;
 As = cell(numObst,1);
 cs = cell(numObst,1);
 
-figure(1);
-
 dimensions = [0 Width 0 Height];
 
 % Create obstacles only in the middle 60%
@@ -69,21 +67,8 @@ for k = 1:numObst
 
     %Add offset to ellipse, is proportional
     Ass(:,:,k) = As{k};
-    Ass(:,:,k) = Ass(:,:,k)*buffer;
-    
-    Ellipse_plot(As{k},cs{k},'b');
-    Ellipse_plot(Ass(:,:,k),cs{k},'r');
-    hold on
-        
+    Ass(:,:,k) = Ass(:,:,k)*buffer;        
 end
-
-X = [starting_point(1),ending_point(1)];
-Y = [starting_point(2),ending_point(2)];
-plot(X,Y,'k');
-hold on
-plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
-plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
-hold off
 
 %% Students add code here for planning
 
@@ -95,7 +80,7 @@ hold off
 % students to modify functions
 
 h = 0.01; % 100Hz sample time. Modify as desired.
-velocity = 3;   %m/s constant speed of the drone
+velocity = 5;   %m/s constant speed of the drone
 
 x0 = zeros(8,1);  %Initial condition.
 x0(1:2) = path(:,1);
@@ -126,7 +111,7 @@ dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
 %X_desired = equalspacing(path,delta_T  *velocity,velocity);
-X_desired = Get_X_desired(path,delta_T  *velocity,velocity, dynparams);
+X_desired = Get_X_desired(path, delta_T*velocity, velocity, dynparams);
 [~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
@@ -155,10 +140,23 @@ while (stop ~= 1)
     k = k+1;
 end
 
-% Tracking Plot
+%% Tracking Plot
 figure
-plot(xs(1,:),xs(2,:),'r.')
+plot(xs(1,:),xs(2,:),'r')
 hold on
 plot(X_desired(1,:),X_desired(2,:),'b')
+plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
+plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
+plot(path(1,:),path(2,:),'k.')
+plot(path(1,1),path(2,1),'pk','MarkerSize',10)
+plot(path(1,end),path(2,end),'pk','MarkerSize',10)
+for k = 1:numObst    
+    Ellipse_plot(As{k},cs{k},'b');
+    Ellipse_plot(Ass(:,:,k),cs{k},'r');
+    hold on   
+end
+title('Path Finding and Following')
+xlabel('X axis (m)')
+ylabel('Y axis (m)')
 
 disp('done')
