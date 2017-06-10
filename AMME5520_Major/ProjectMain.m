@@ -125,7 +125,8 @@ u0 = [m*g/2; m*g/2];
 dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
-X_desired = equalspacing(path,delta_T  *velocity,velocity);
+%X_desired = equalspacing(path,delta_T  *velocity,velocity);
+X_desired = Get_X_desired(path,delta_T  *velocity,velocity, dynparams);
 [~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
@@ -137,12 +138,9 @@ while (stop ~= 1)
     
     ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
   
-    % Kalman filter state estimator instead of 1st line
-    [P(k+1),xt_kal] = Kalman_Filter(xs(:,k), P(k), yt, ut, C_kal, R);
-    
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
-    xs(:,k+1) = RungeKutta4(@QuadDynamics, xt_kal, ut, 0, h, dynparams);
+    xs(:,k+1) = RungeKutta4(@QuadDynamics, xt, ut, 0, h, dynparams);
     
     ts(k+1) = ts(k)+h;
     us(:,k) = ut;
