@@ -10,13 +10,13 @@ Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 5; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+numObst = 15; % Control the number of obstacles, e.g. 10, 20, 30, 40.
 Adim = 15; % Control the "average" size of the obstacles.
 buffer = 0.8;    %buffer zone in percent
 
 % Starting/Ending Points in form [X,Y]
-starting_point = [250,120];
-ending_point = [100,120];
+starting_point = [0,100];
+ending_point = [250,100];
 
 % Parameters for Path Planning
 drawrealtime = 0;   % do PRM showing each step (looks cool!)
@@ -25,6 +25,26 @@ K = 3;  %number of nearest nodes to connect to
 
 % Parameters for Closed Loop Simulation
 h = 0.01; % 100Hz sample time. Modify as desired.
+
+C_kal = zeros(8);
+C_kal(1,1) = 1; % X
+C_kal(2,2) = 1; % Y
+C_kal(3,3) = 1; % th
+C_kal(6,6) = 1; % th;
+
+R = zeros(8);
+sigma_X = 0.01;
+sigma_Y = 0.01;
+sigma_Th = 0.01;
+sigma_Th_dot = 0.01;
+
+R(1,1) = sigma_X;
+R(2,2) = sigma_Y;
+R(3,3) = sigma_Th;
+R(6,6) = sigma_Th_dot;
+
+x_hat_prev = [10;10;0;0;0;0;3;3];
+P = eye(8)*1e-1;
 
 %*************************************************************************%
 
@@ -69,16 +89,16 @@ hold off
 
 % - Students to modify ComputePath, to include collision checker, PRM, and
 % path planner.
-[min_dist, shortest_path_coordinates] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
+[min_dist, path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
 
 %% Simulate Closed-loop system
 % students to modify functions
 
 h = 0.01; % 100Hz sample time. Modify as desired.
-velocity = 50;   %m/s constant speed of the drone
+velocity = 3;   %m/s constant speed of the drone
 
 x0 = zeros(8,1);  %Initial condition.
-x0(1) = s
+x0(1:2) = path(:,1);
 
 stop = 0;
 ts = 0;
@@ -96,7 +116,7 @@ delta_T = 1/freq;   % seconds
 xt = x0;
 
 % Control Input
-ut = [m*g/2, m*g/2];    %set initial values to hover at equillibrium
+ut = [m*g/2; m*g/2];    %set initial values to hover at equillibrium
 
 % Reference Control Input
 u0 = [m*g/2; m*g/2];
@@ -105,23 +125,20 @@ u0 = [m*g/2; m*g/2];
 dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
-desired_XY = discretise_path(velocity, delta_T, shortest_path_coordinates);
-[num_steps, c] = size(desired_XY);
-
-% Build X Desired matrix
-X_desired = zeros(num_steps,8);
-X_desired(:,1:2) = desired_XY
-
+X_desired = equalspacing(path,delta_T  *velocity,velocity);
+[~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
     
     % Current state.
     xt = xs(:,k);
-    
     % Get current measurement, compute control.
     yt = meas(xt);
     
-    [ut, dynparams] = ComputeControl(u0, xt, X_desired(k,:), dynparams);
+    ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
+  
+    % Kalman filter state estimator instead of 1st line
+    [P(k+1),xt] = Kalman_Filter(xs(:,k-1), P(k), yt, ut);
     
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
@@ -131,6 +148,8 @@ while (stop ~= 1)
     us(:,k) = ut;
     
     if (k>=num_steps)
+        % if not reached, continue to try to reach?
+        
         stop = 1;  % Stop after 100 time steps. You will need to change this.
         % Should stop after goal reached or collision.
     end
@@ -138,7 +157,10 @@ while (stop ~= 1)
     k = k+1;
 end
 
-%% plot
+% Tracking Plot
 figure
-plot(xs(1,:),xs(2,:))
+plot(xs(1,:),xs(2,:),'r.')
+hold on
+plot(X_desired(1,:),X_desired(2,:),'b')
 
+disp('done')
