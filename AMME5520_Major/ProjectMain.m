@@ -120,6 +120,8 @@ X_desired = Get_X_desired(path, delta_T*velocity, velocity, dynparams);
 [~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
+    % Assume K = Previous Step k == k - 1
+    % K + 1 = Current Step we computing for k + 1 == k
     
     % Current state.
     xt = xs(:,k);
@@ -132,8 +134,11 @@ while (stop ~= 1)
     % step of length h.
     xs(:,k+1) = RungeKutta4(@QuadDynamics, xt, ut, 0, h, dynparams); 
     
+    % Measurement of step K+1
+    yt_k1 = meas(xs(:,k+1),sigma_X);
+    
     % Kalman filter state estimator 
-    [P(:,:,k+1),xs(:,k)] = Kalman_Filter(xs(:,k), P(:,:,k), yt, ut, C_kal, R);
+    [P(:,:,k+1),xs(:,k)] = Kalman_Filter(xs(:,k), P(:,:,k), yt_k1, C_kal, R);
                    
     ts(k+1) = ts(k)+h;
     us(:,k) = ut;
