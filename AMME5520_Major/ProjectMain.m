@@ -127,7 +127,7 @@ u0 = [m*g/2; m*g/2];
 dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
-X_desired = equalspacing(path,delta_T  *velocity,velocity);
+X_desired = equalspacing(path,delta_T  *velocity,velocity, dynparams);
 [~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
