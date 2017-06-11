@@ -19,7 +19,7 @@ starting_point = [0,100];
 ending_point = [250,100];
 
 % Parameters for Path Planning
-drawrealtime = 0;   % do PRM showing each step (looks cool!)
+drawrealtime = 1;   % do PRM showing each step (looks cool!)
 N = 200; %number of points/nodes required
 K = 3;  %number of nearest nodes to connect to
 
@@ -55,10 +55,10 @@ end
 % - Students to modify ComputePath, to include collision checker, PRM, and
 % path planner.
 
-% [min_dist, path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
+ [min_dist, path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
 % save('workspace_11am')
- clear all
- load('workspace_11am')
+% clear all
+% load('workspace_11am')
  
  % Parameters for Kalman
 C_kal = eye(8);
@@ -75,6 +75,7 @@ R(2,2) = sigma_X^2;
 R(3,3) = sigma_th^2;
 R(6,6) = sigma_thd^2;
 
+Q = eye(8);
 P = eye(8)*1e-6;
 %% Simulate Closed-loop system
 % students to modify functions
@@ -115,9 +116,6 @@ X_desired = Get_X_desired(path, delta_T*velocity, velocity, dynparams);
 [~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
-    % Assume K = Previous Step k == k - 1
-    % K + 1 = Current Step we computing for k + 1 == k
-    
     % Current state.
     xt = xs(:,k);
    
@@ -131,7 +129,7 @@ while (stop ~= 1)
     yt_k1 = meas(xs(:,k+1),variance);
     
     % Kalman filter state estimator 
-    [P(:,:,k+1),xs(:,k)] = Kalman_Filter(xs(:,k), P(:,:,k), yt_k1, C_kal, R);
+    [P(:,:,k+1),xs(:,k)] = Kalman_Filter(xs(:,k), P(:,:,k), yt_k1, C_kal, Q, R);
                    
     ts(k+1) = ts(k)+h;
     us(:,k) = ut;

@@ -1,7 +1,7 @@
 % clc
 % clear all
 
-function [P,x_hat] = Kalman_Filter(x_hat_minus, P_prev, yt, C, R)
+function [P,x_hat] = Kalman_Filter(x_hat_minus, P_prev, yt, C, Q, R)
 
 % **************************** Constants **********************************
 m = 0.612;  %kg
@@ -27,22 +27,22 @@ B = [0 0;
     0 0;
     2 0;
     0 2];
-Q = eye(8);
 
 % **********************************************************************
 
 % % Prediction Stage Estimates x^-(k)
 % x_hat_minus = A*x_hat_prev + B*ut;
+% Prediction Equation 2. Calculate current covariance
 P_minus = A*P_prev*A' + Q;
 
-% Equation 1. Calculate Kalman Gain K
+% Update Equation 1. Calculate Kalman Gain K
 K = (P_minus*C')\( C*P_minus*C' + R );
 % K(isnan(K)) = 0;
 
-% Equation 2. Calculate estimated x_hat
+% Update Equation 2. Calculate estimated x_hat
 x_hat = x_hat_minus + K*(yt - C*x_hat_minus);
 
-% Equation 3. Calculate new Covariance
+% Update Equation 3. Calculate new Covariance
 P = (eye(8) - K*C)*P_minus;
 
 %  disp('K = ')
