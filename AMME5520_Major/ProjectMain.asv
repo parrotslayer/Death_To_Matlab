@@ -10,7 +10,7 @@ Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 15; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+numObst = 20; % Control the number of obstacles, e.g. 10, 20, 30, 40.
 Adim = 15; % Control the "average" size of the obstacles.
 buffer = 0.8;    %buffer zone in percent
 
@@ -26,33 +26,12 @@ K = 3;  %number of nearest nodes to connect to
 % Parameters for Closed Loop Simulation
 h = 0.01; % 100Hz sample time. Modify as desired.
 
-C_kal = zeros(8);
-C_kal(1,1) = 1; % X
-C_kal(2,2) = 1; % Y
-C_kal(3,3) = 1; % th
-C_kal(6,6) = 1; % th;
-
-R = zeros(8);
-sigma_X = 0.01;
-sigma_Y = 0.01;
-sigma_Th = 0.01;
-sigma_Th_dot = 0.01;
-
-R(1,1) = sigma_X;
-R(2,2) = sigma_Y;
-R(3,3) = sigma_Th;
-R(6,6) = sigma_Th_dot;
-
-x_hat_prev = [10;10;0;0;0;0;3;3];
-P = eye(8)*1e-1;
-
+% P
 %*************************************************************************%
 
 %% Obstacle Generation
 As = cell(numObst,1);
 cs = cell(numObst,1);
-
-figure(1);
 
 dimensions = [0 Width 0 Height];
 
@@ -69,21 +48,8 @@ for k = 1:numObst
 
     %Add offset to ellipse, is proportional
     Ass(:,:,k) = As{k};
-    Ass(:,:,k) = Ass(:,:,k)*buffer;
-    
-    Ellipse_plot(As{k},cs{k},'b');
-    Ellipse_plot(Ass(:,:,k),cs{k},'r');
-    hold on
-        
+    Ass(:,:,k) = Ass(:,:,k)*buffer;        
 end
-
-X = [starting_point(1),ending_point(1)];
-Y = [starting_point(2),ending_point(2)];
-plot(X,Y,'k');
-hold on
-plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
-plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
-hold off
 
 %% Students add code here for planning
 
@@ -95,7 +61,7 @@ hold off
 % students to modify functions
 
 h = 0.01; % 100Hz sample time. Modify as desired.
-velocity = 3;   %m/s constant speed of the drone
+velocity = 5;   %m/s constant speed of the drone
 
 x0 = zeros(8,1);  %Initial condition.
 x0(1:2) = path(:,1);
@@ -125,7 +91,8 @@ u0 = [m*g/2; m*g/2];
 dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
-X_desired = equalspacing(path,delta_T  *velocity,velocity);
+%X_desired = equalspacing(path,delta_T  *velocity,velocity);
+X_desired = Get_X_desired(path, delta_T*velocity, velocity, dynparams);
 [~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
@@ -137,9 +104,6 @@ while (stop ~= 1)
     
     ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
   
-    % Kalman filter state estimator instead of 1st line
-    [P(k+1),xt] = Kalman_Filter(xs(:,k-1), P(k), yt, ut);
-    
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
     xs(:,k+1) = RungeKutta4(@QuadDynamics, xt, ut, 0, h, dynparams);
@@ -157,10 +121,23 @@ while (stop ~= 1)
     k = k+1;
 end
 
-% Tracking Plot
+%% Tracking Plot
 figure
-plot(xs(1,:),xs(2,:),'r.')
+plot(xs(1,:),xs(2,:),'r')
 hold on
 plot(X_desired(1,:),X_desired(2,:),'b')
+plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
+plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
+plot(path(1,:),path(2,:),'k.')
+plot(path(1,1),path(2,1),'pk','MarkerSize',10)
+plot(path(1,end),path(2,end),'pk','MarkerSize',10)
+for k = 1:numObst    
+    Ellipse_plot(As{k},cs{k},'b');
+    Ellipse_plot(Ass(:,:,k),cs{k},'r');
+    hold on   
+end
+title('Path Finding and Following')
+xlabel('X axis (m)')
+ylabel('Y axis (m)')
 
 disp('done')

@@ -1,5 +1,5 @@
-function y = meas(x, dimensions)
+function y = meas(x, variance)
 %% Define measurements
 
 
-y = x; %start with perfect state feedback.
+y = normrnd(x,variance); %start with perfect state feedback.
