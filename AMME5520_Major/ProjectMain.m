@@ -34,7 +34,7 @@ C_kal(6,6) = 1; % th;
 C_kal = eye(8);
 
 R = zeros(8);
-sigma_X = 0.01;
+sigma_X = 1;
 sigma_Y = 0.01;
 sigma_Th = 0.01;
 sigma_Th_dot = 0.01;
@@ -43,6 +43,7 @@ R(1,1) = sigma_X;
 R(2,2) = sigma_Y;
 R(3,3) = sigma_Th;
 R(6,6) = sigma_Th_dot;
+R = eye(8)*sigma_X;
 
 x_hat_prev = [10;10;0;0;0;0;3;3];
 P = eye(8)*1e-6;
@@ -135,7 +136,7 @@ while (stop ~= 1)
     % Current state.
     xt = xs(:,k);
     % Get current measurement, compute control.
-    yt = meas(xt);
+    yt = meas(xt,sigma_X);
     
     ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
   
@@ -146,7 +147,7 @@ while (stop ~= 1)
     xs(:,k+1) = RungeKutta4(@QuadDynamics, xt, ut, 0, h, dynparams);
 
     % Kalman filter state estimator 
-    [P(:,:,k+1),xt_kal(:,k+1)] = Kalman_Filter(xs(:,k), P(:,:,k), yt, ut, C_kal, R);
+    [P(:,:,k+1),xs(:,k)] = Kalman_Filter(xt, P(:,:,k), yt, ut, C_kal, R);
     
     ts(k+1) = ts(k)+h;
     us(:,k) = ut;
@@ -161,10 +162,18 @@ while (stop ~= 1)
     k = k+1;
 end
 
+%% Removing outliers
+for i = 1:num_steps-1
+    if abs(xs(1,i)) > 300
+        xs(:,i) = xs(:,i+1);
+        disp(i)
+    end
+end
+
 % Tracking Plot
 figure
 plot(xs(1,:),xs(2,:),'r.')
 hold on
 plot(X_desired(1,:),X_desired(2,:),'b')
-
+legend('xs','X desired')
 disp('done')

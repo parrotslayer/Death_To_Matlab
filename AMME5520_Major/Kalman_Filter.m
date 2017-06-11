@@ -50,9 +50,9 @@ x_hat = x_hat_minus + K*(yt - C*x_hat_minus);
 % Equation 3. Calculate new Covariance
 P = (eye(8) - K*C)*P_prev;
 
- disp('X hat')
- disp(x_hat)
- disp('P')
- disp(P)
- disp('done')
+%  disp('X hat')
+%  disp(x_hat)
+%  disp('P')
+%  disp(P)
+%  disp('done')
 %end
