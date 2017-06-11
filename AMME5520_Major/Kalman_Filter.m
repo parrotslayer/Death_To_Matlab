@@ -28,11 +28,12 @@ B = [0 0;
     2 0;
     0 2];
 Q = eye(8);
+
 % **********************************************************************
 
 % % Prediction Stage Estimates x^-(k)
 % x_hat_minus = A*x_hat_prev + B*ut;
-P_minus = A*P_prev*A' + Q
+P_minus = A*P_prev*A' + Q;
 
 % Equation 1. Calculate Kalman Gain K
 K = (P_minus*C')\( C*P_minus*C' + R );
@@ -44,8 +45,8 @@ x_hat = x_hat_minus + K*(yt - C*x_hat_minus);
 % Equation 3. Calculate new Covariance
 P = (eye(8) - K*C)*P_minus;
 
-disp('K = ')
-disp(K)
+%  disp('K = ')
+%  disp(K)
 %  disp('X hat')
 %  disp(x_hat)
 %  disp('P')

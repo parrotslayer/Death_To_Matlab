@@ -26,28 +26,6 @@ K = 3;  %number of nearest nodes to connect to
 % Parameters for Closed Loop Simulation
 h = 0.01; % 100Hz sample time. Modify as desired.
 
-% Parameters fo Kalman
-C_kal = zeros(8);
-C_kal(1,1) = 1; % X
-C_kal(2,2) = 1; % Y
-C_kal(3,3) = 1; % th
-C_kal(6,6) = 1; % th;
-C_kal = eye(8);
-
-R = zeros(8);
-sigma_X = 0.1;
-sigma_Y = 0.01;
-sigma_Th = 0.01;
-sigma_Th_dot = 0.01;
-
-R(1,1) = sigma_X;
-R(2,2) = sigma_Y;
-R(3,3) = sigma_Th;
-R(6,6) = sigma_Th_dot;
-R = eye(8)*sigma_X;
-
-x_hat_prev = [10;10;0;0;0;0;3;3];
-P = eye(8)*1e-6;
 %*************************************************************************%
 
 %% Obstacle Generation
@@ -77,10 +55,17 @@ end
 % - Students to modify ComputePath, to include collision checker, PRM, and
 % path planner.
 
-[min_dist, path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
-%save('workspace_11am')
-%clear all
-%load('workspace_11am')
+% [min_dist, path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
+% save('workspace_11am')
+ clear all
+ load('workspace_11am')
+ 
+ % Parameters for Kalman
+C_kal = eye(8);
+R = zeros(8);
+sigma_X = 0.5;
+R = eye(8)*sigma_X;
+P = eye(8)*1e-6;
 %% Simulate Closed-loop system
 % students to modify functions
 
@@ -163,7 +148,7 @@ end
 
 % Tracking Plot
 figure
-plot(xs(1,:),xs(2,:),'r.')
+plot(xs(1,:),xs(2,:),'r')
 hold on
 plot(X_desired(1,:),X_desired(2,:),'b')
 plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
