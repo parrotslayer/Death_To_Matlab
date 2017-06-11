@@ -62,9 +62,19 @@ end
  
  % Parameters for Kalman
 C_kal = eye(8);
-R = zeros(8);
-sigma_X = 0.5;
-R = eye(8)*sigma_X;
+
+sigma_avg = 0.01;
+sigma_X = 1/3;  % error from GPS
+sigma_th = 0.1; % error from IMU/Gyro
+sigma_thd = 0.01;   % error from IMU/Gyro
+variance = [sigma_X; sigma_X; sigma_th; sigma_avg; sigma_avg; sigma_thd; sigma_avg; sigma_avg];
+
+R = eye(8)*sigma_avg;
+R(1,1) = sigma_X^2;
+R(2,2) = sigma_X^2;
+R(3,3) = sigma_th^2;
+R(6,6) = sigma_thd^2;
+
 P = eye(8)*1e-6;
 %% Simulate Closed-loop system
 % students to modify functions
@@ -110,9 +120,7 @@ while (stop ~= 1)
     
     % Current state.
     xt = xs(:,k);
-    % Get current measurement, compute control.
-    yt = meas(xt,sigma_X);
-    
+   
     ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
       
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
@@ -120,7 +128,7 @@ while (stop ~= 1)
     xs(:,k+1) = RungeKutta4(@QuadDynamics, xt, ut, 0, h, dynparams); 
     
     % Measurement of step K+1
-    yt_k1 = meas(xs(:,k+1),sigma_X);
+    yt_k1 = meas(xs(:,k+1),variance);
     
     % Kalman filter state estimator 
     [P(:,:,k+1),xs(:,k)] = Kalman_Filter(xs(:,k), P(:,:,k), yt_k1, C_kal, R);
