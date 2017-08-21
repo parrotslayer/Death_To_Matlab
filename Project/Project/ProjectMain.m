@@ -1,34 +1,17 @@
 %%% Base file for AMME5520 Assignment 2
 % Navigation and control through an obstacle field. The objective is to go
 % from left to right.
+clear
 clc
 close all
-clear all
-
-%************************* PARAMETERS *************************************%
 Width = 300;
 Height = 150;
 
 % Randomly generate some obstacles (number, average size as parameters)
-numObst = 5; % Control the number of obstacles, e.g. 10, 20, 30, 40.
-Adim = 15; % Control the "average" size of the obstacles.
-buffer = 0.8;    %buffer zone in percent
+numObst = 10; % Control the number of obstacles, e.g. 10, 20, 30, 40.
+Adim = 15; % Control the "Average" size of the obstacles.
 
-% Starting/Ending Points in form [X,Y]
-starting_point = [0,0];
-ending_point = [300,150];
 
-% Parameters for Path Planning
-drawrealtime = 0;   % do PRM showing each step (looks cool!)
-N = 200; %number of points/nodes required
-K = 3;  %number of nearest nodes to connect to
-
-% Parameters for Closed Loop Simulation
-h = 0.01; % 100Hz sample time. Modify as desired.
-
-%*************************************************************************%
-
-%% Obstacle Generation
 As = cell(numObst,1);
 cs = cell(numObst,1);
 
@@ -42,35 +25,38 @@ rightlim = 0.8*(dimensions(2)-dimensions(1));
 
 for k = 1:numObst
     % Generate ellipse in the form (x-c)'A(x-c)=1
-    L = randn(2,2);
-    As{k} = (0.4*eye(2)+ L'*L)/Adim^2;
-    tmp = rand(2,1);
-    cs{k} = [leftlim+(rightlim-leftlim)*tmp(1);dimensions(3)+(dimensions(4)-dimensions(3))*tmp(2)];
-
-    %Add offset to ellipse, is proportional
-    Ass(:,:,k) = As{k};
-    Ass(:,:,k) = Ass(:,:,k)*buffer;
     
-    Ellipse_plot(As{k},cs{k},'b');
-    Ellipse_plot(Ass(:,:,k),cs{k},'r');
-    hold on
-        
+     L = randn(2,2);
+     As{k} = (0.4*eye(2)+ L'*L)/Adim^2;
+     tmp = rand(2,1);
+     cs{k} = [leftlim+(rightlim-leftlim)*tmp(1);dimensions(3)+(dimensions(4)-dimensions(3))*tmp(2)];
+     Ellipse_plot(As{k},cs{k});
+     
 end
-
-X = [starting_point(1),ending_point(1)];
-Y = [starting_point(2),ending_point(2)];
-plot(X,Y,'k');
-hold on
 plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
 plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
-hold off
+
 
 %% Students add code here for planning
-
 % - Students to modify ComputePath, to include collision checker, PRM, and
 % path planner.
-[min_dist, path] = ComputePath(drawrealtime,N,K,Width,Height,dimensions,As,Ass,cs,starting_point,ending_point);
+num_nodes = 100; % Number of nodes to generate with PRM
+Ass = As;
+bufferzone = 0.6;
+for k = 1 : length(Ass)
+    Ass{k} = Ass{k} * bufferzone;
+end
+[path,best_cost] = ComputePath(Ass,cs,num_nodes);
+for k = 1 : numObst
+     Ellipse_plot(As{k},cs{k});
+end
+plot(path(1,:),path(2,:),'-x');
+plot([dimensions(1) dimensions(2)],[dimensions(3) dimensions(3)],'r');
+plot([dimensions(1) dimensions(2)],[dimensions(4) dimensions(4)],'r');
+grid on
+grid minor
 
+hold off
 %% Simulate Closed-loop system
 % students to modify functions
 
@@ -78,7 +64,7 @@ h = 0.01; % 100Hz sample time. Modify as desired.
 velocity = 3;   %m/s constant speed of the drone
 
 x0 = zeros(8,1);  %Initial condition.
-x0(1:2) = starting_point;
+x0(1:2) = path(:,1);
 
 stop = 0;
 ts = 0;
@@ -105,17 +91,8 @@ u0 = [m*g/2; m*g/2];
 dynparams = [m,g,L,I,freq];
 
 % Discretise Curve to Obtain desired state at each timestep.
-%desired_XY = discretise_path(velocity, delta_T, shortest_path_coordinates);
-
-X_desired = Get_X_Desired(path',delta_T*velocity,velocity);
-
-[num_steps, c] = size(X_desired);
-
-% Build X Desired matrix
-% X_desired = zeros(num_steps,8);
-% X_desired(:,1:2) = desired_XY;
-% X_desired(:,7:8) = m*g/2;
-
+X_desired = equalspacing(path,delta_T  *velocity,velocity);
+[~,num_steps] = size(X_desired);
 k = 1;
 while (stop ~= 1)
     
@@ -125,11 +102,11 @@ while (stop ~= 1)
     % Get current measurement, compute control.
     yt = meas(xt);
     
-    [ut, dynparams] = ComputeControl(u0, xt, X_desired(:,k), dynparams);
+    ut = ComputeControl(u0, xt, X_desired(:,k), dynparams);
     
     % Use Runge Kutta to approximate the nonlinear dynamics over one time
     % step of length h.
-    xs(:,k+1) = RungeKutta4(@QuadDynamics, xt, ut, 0, h, dynparams);
+    xs(:,k+1) = RungeKutta4(@QuadDynamics2, xt, ut, 0, h, dynparams);
     
     ts(k+1) = ts(k)+h;
     us(:,k) = ut;
