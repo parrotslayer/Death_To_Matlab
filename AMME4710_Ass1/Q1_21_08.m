@@ -42,7 +42,7 @@ for i = 1:h
     normal(i,j,3) = nhat(3);    %z
     
     %compute p and q
-    p(i,j) = normal(i,j,1)/normal(i,j,2);
+    p(i,j) = normal(i,j,1)/normal(i,j,3);
     q(i,j) = normal(i,j,2)/normal(i,j,3);
         
     end
@@ -51,7 +51,7 @@ end
 %check if (dp/dy - dq/dx)^2 is small
 
 %calculate integral
-height_map = cumsum(p,1) + cumsum(q,1);
+height_map = (cumsum(p,2) + cumsum(q,1)) ;
 
 % set 1st pixel to 0
 offset = height_map(1,1);
@@ -61,7 +61,6 @@ offset = height_map(1,1);
 
 display_face_model(albedo, height_map)
 
-
-figure
-imagesc(albedo)
-colormap(gray)
+%figure
+%imagesc(albedo)
+%colormap(gray)
