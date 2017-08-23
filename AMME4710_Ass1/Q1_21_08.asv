@@ -1,20 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%     I = ro*N*s    %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% where:
-% ro -> albedo (reflectance) - 
-% N -> Normal
-% s -> direction of the light
-
-% im_array - has all the images
-
-%only first pixel for now
-
-
-% I = s*g
-% b = Ax    ...  x = A^-1 b  or  A^-1\b
-
 close all
 clear all
 clc
@@ -65,12 +48,19 @@ height_map = height_map - offset;
 % show the 3D face
 display_face_model(albedo, height_map)
 title('3D reconstution of a face')
+
+%% show faces before
+figure
+montage(reshape(im_array,rows,cols,1,N))
+title('im_array before filtering')
+
 %% Part 2 Outlier detection
 
 I_est = zeros(rows,cols,N);
 residuals = zeros(rows,cols,N);
 outlier = ones(rows,cols,N);
 im_array2 = zeros(rows,cols,3,N);
+im_array3 = im_array;
 p_filt = zeros(rows,cols);
 q_filt = zeros(rows,cols);
 bad_values = 0;
@@ -90,10 +80,15 @@ for i = 1:rows
         %find residuals
         for k = 1:N
             if residuals(i,j,k) > upper || residuals(i,j,k) < lower
-                im_array2(i,j,:,k) = cat(3,255,0,0);
+                %New array holding outliers
                 outlier(i,j,k) = 0;
-                %remove crappy values from the original data
-                im_array(i,j,k) = NaN;
+                %Set outliers in original data to be white 255
+                im_array(i,j,k) = 255;
+                % images in RGB with outliers highlighted in red
+                im_array2(i,j,:,k) = cat(3,255,0,0);
+                %remove crappy values from the copied original data
+                im_array3(i,j,k) = NaN;
+                %increment number of bad
                 bad_values = bad_values + 1;
             else
                 im_array2(i,j,:,k) = reshape(cat(3,im_array(i,j,k),im_array(i,j,k),im_array(i,j,k)),[3,1]);                
@@ -101,7 +96,7 @@ for i = 1:rows
         end
         
         %calc new normals without residuals
-        I = reshape(im_array(i,j,:),[N,1]);     % 1x1x64 -> 64x1. Pixel values from each image
+        I = reshape(im_array3(i,j,:),[N,1]);     % 1x1x64 -> 64x1. Pixel values from each image
         G = A\(double(I)/255);                  % Intensity b (uint8) scaled to [0-1]
         
         %compute albedo and normals
@@ -133,11 +128,6 @@ height_map2 = height_map2 - offset;
 % show the 3D face
 display_face_model(albedo, height_map2)
 title('3D reconstution of a face with outliers removed')
-
-%% show faces b
-figure
-montage(reshape(outlier,rows,cols,1,N))
-title('show outliers in BW')
 
 %% show im_array2
 figure
