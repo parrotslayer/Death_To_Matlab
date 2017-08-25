@@ -2,15 +2,15 @@ clc
 clear all
 close all
 
-lego = imread('legobricks007.jpg');
+lego = imread('legomontage.png');
 
 figure
 imshow(lego)
 title('Image Loaded')
 
 % Apply Filter
-[BW,maskedRGBImage] = Im1_Blue(lego);
-
+%[BW,maskedRGBImage] = Im1_Blue(lego);
+[BW,maskedRGBImage] = Montage_Blue(lego);
 %figure
 %imshow(BW)
 
