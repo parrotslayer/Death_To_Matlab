@@ -52,7 +52,7 @@ title('3D reconstution of a face')
 p2 = p;
 
 % set first row to integral of q - offset
-p2(1,:) = cumsum(q(1,:),1) - q(1,1);
+p2(:,1) = cumsum(q(:,1),2);
 
 %calculate integral
 height_map2 = cumsum(p2,2);
@@ -72,7 +72,8 @@ title('Integrate p across')
 q2 = q;
 
 % set first col to integral of p
-q2(:,1) = cumsum(p(:,1),2);
+q2(1,:) = cumsum(p(1,:),1);
+
 %calculate integral
 height_map3 = cumsum(q2,1);
 
