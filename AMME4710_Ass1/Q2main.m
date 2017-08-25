@@ -10,9 +10,10 @@ title('Image Loaded')
 
 % Apply Filter
 %[BW,maskedRGBImage] = Im1_Blue(lego);
-[BW,maskedRGBImage] = Montage_Blue(lego);
-%figure
-%imshow(BW)
+[BW,maskedRGBImage] = Montage_Red(lego);
+
+figure
+imshow(BW)
 
 figure
 imshow(maskedRGBImage)

@@ -2,7 +2,7 @@ close all
 clear all
 clc
 
-load('facedata_yaleB01.mat')
+load('facedata_yaleB07.mat')
 
 [rows,cols,N] = size(im_array);
 
@@ -33,9 +33,7 @@ for i = 1:rows
     end
 end
 
-%% Integrate 
-%check if (dp/dy - dq/dx)^2 is small
-
+%% Integrate Average 
 %calculate integral
 height_map = (cumsum(p,2) + cumsum(q,1))/2 ;
 
@@ -48,6 +46,45 @@ height_map = height_map - offset;
 % show the 3D face
 display_face_model(albedo, height_map)
 title('3D reconstution of a face')
+
+%% Across
+% set first row of p from q
+p2 = p;
+
+% set first row to integral of q - offset
+p2(1,:) = cumsum(q(1,:),1) - q(1,1);
+
+%calculate integral
+height_map2 = cumsum(p2,2);
+
+% set 1st pixel to 0
+offset = height_map2(1,1);
+
+%offset array
+height_map2 = height_map2 - offset;
+
+% show the 3D face
+display_face_model(albedo, height_map2)
+title('Integrate p across')
+
+%% Down
+% set first row of p from q
+q2 = q;
+
+% set first col to integral of p
+q2(:,1) = cumsum(p(:,1),2);
+%calculate integral
+height_map3 = cumsum(q2,1);
+
+% set 1st pixel to 0
+offset = height_map3(1,1);
+
+%offset array
+height_map3 = height_map3 - offset;
+
+% show the 3D face
+display_face_model(albedo, height_map3)
+title('Integrate q down')
 
 %% show faces before
 figure
