@@ -4,7 +4,14 @@ close all
 
 % Load the image
 %lego = imread('legomontage3.png');
-filename = 'legobricks009.jpg';
+lego_num = ['001';'002';'003';'004';'005';'006';'007';'008';'009';'010';...
+    '011';'012';'013';'014';'015';'016';'017'];
+%choose the image to display
+N = 1;
+
+for N = 12:17
+
+filename = ['legobricks',lego_num(N,:),'.jpg'];
 lego = imread(filename);
 
 %Preallocate arrays
@@ -21,7 +28,7 @@ title(['Image Loaded: ',filename])
 [BW,Red] = Montage_Red(lego);
 
 %thresholds
-min = 500;
+min = 2000;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
 
@@ -52,7 +59,7 @@ end
 [BW,DGreen] = Montage_DGreen2(lego);
 
 %thresholds
-min = 500;
+min = 2000;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
 
@@ -83,7 +90,7 @@ end
 [BW,Blue] = Montage_Blue(lego);
 
 %thresholds
-min = 500;
+min = 2000;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
 
@@ -169,4 +176,6 @@ if n > 0
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Yellow';
     text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+end
+
 end
