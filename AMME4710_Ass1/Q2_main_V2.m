@@ -17,7 +17,7 @@ lego = imread(filename);
 %Preallocate arrays
 % Red, Dark Green, Blue, Light Green, Yellow, Orange
 All_centroids = NaN(6,2);
-All_boxes = NaN(6,4);
+All_boxes = zeros(6,4);
 
 figure
 imshow(lego)
@@ -39,8 +39,8 @@ BW3 = bwareafilt(BW2,1);
 regions_Red = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
 %check if there is a red block detected
-[n,trump] = size(regions_Red);
-if n > 0
+[N,trump] = size(regions_Red);
+if N > 0
     
     %Store information in arrays
     centroid = regions_Red.Centroid;
@@ -59,7 +59,7 @@ end
 [BW,DGreen] = Montage_DGreen2(lego);
 
 %thresholds
-min = 500;
+min = 400;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
 
@@ -70,8 +70,8 @@ BW3 = bwareafilt(BW2,1);
 regions_DGreen = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
 %check if there is a dark green block detected
-[n,trump] = size(regions_DGreen);
-if n > 0
+[N,trump] = size(regions_DGreen);
+if N > 0
     
     %Store information in arrays
     centroid = regions_DGreen.Centroid;
@@ -90,9 +90,13 @@ end
 [BW,Blue] = Montage_Blue(lego);
 
 %thresholds
-min = 500;
+min = 400;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
+% 
+% figure
+% imshow(Blue)
+% regionsos = regionprops(BW, 'Centroid', 'Area', 'BoundingBox')
 
 % Take largest block, high confidence only wanted block is there
 BW3 = bwareafilt(BW2,1);
@@ -101,8 +105,8 @@ BW3 = bwareafilt(BW2,1);
 regions_Blue = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
 %check if there is a blue block detected
-[n,trump] = size(regions_Blue);
-if n > 0
+[N,trump] = size(regions_Blue);
+if N > 0
     
     %Store information in arrays
     centroid = regions_Blue.Centroid;
@@ -133,8 +137,8 @@ BW3 = bwareafilt(BW2,1);
 regions_LGreen = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
 %check if there is a light green block detected
-[n,trump] = size(regions_LGreen);
-if n > 0
+[N,trump] = size(regions_LGreen);
+if N > 0
     
     %Store information in arrays
     centroid = regions_LGreen.Centroid;
@@ -147,6 +151,7 @@ if n > 0
     string = 'Light Green';
     text(box(1),box(2)+100,string,'Color','White','FontSize',14)
 end
+
 %% Yellow Filtering
 % Apply filter
 [BW,Yellow] = Montage_Yellow1(lego);
@@ -156,26 +161,42 @@ min = 500;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
 
-% Take several largest blocks cos can be lgreen, yellow or orange
-BW3 = bwareafilt(BW2,1);
-
-% Details on the final block
-regions_Yellow = regionprops(BW3, 'Centroid', 'Area','BoundingBox');
+% Details on the multiple block
+regions_Yellow = regionprops(BW2, 'Centroid', 'Area','BoundingBox');
 
 %check if there is a yellow block detected
-[n,trump] = size(regions_Yellow);
-if n > 0
+[N,trump] = size(regions_Yellow);
+if N > 0
     
-    %Store information in arrays
-    centroid = regions_Yellow.Centroid;
-    All_centroids(4,:) = centroid;     
-    box = regions_Yellow.BoundingBox;
-    All_boxes(4,:) = box; 
+    for i = 1:N   
+        % Find overlapping areas;
+        box = regions_Yellow(i).BoundingBox;   
+        overlap = 0;
+        for k = 1:6
+            % find area of overlapping bounding boxes
+            area = 0;
+            area = rectint(All_boxes(k,:),box);
+            %check if any bounding boxes overlap (not with itself)
+            if area > 1 && k ~= 5
+                disp('Overlap Found')
+                overlap = overlap + 1;
+                break
+            end
+        end        
+    end
     
-    %Create bounding box
-    rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-    string = 'Yellow';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    % dont make bounding box if overlap?
+    if overlap < 1 
+        %Create bounding box
+        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+        string = 'Yellow';
+        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+        % store data in array
+        All_boxes(5,:) = box;
+        All_centroids(5,:) = regions_Yellow(i).Centroid;
+
+    end
+    
 end
 
 end
