@@ -3,8 +3,8 @@ clear all
 close all
 
 % Load the image
-lego = imread('legomontage3.png');
-%lego = imread('legobricks012.jpg');
+%lego = imread('legomontage3.png');
+lego = imread('legobricks009.jpg');
 
 figure
 imshow(lego)
@@ -40,8 +40,13 @@ imshow(BW3)
 title('Show largest Region')
 
 % Details on the final block
-regions_blue = regionprops(BW3, 'Centroid', 'Area');
+regions_blue = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
+%Create bounding box
+box = regions_blue.BoundingBox;
+rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+string = 'Blue';
+text(box(1),box(2)+100,string,'Color','White','FontSize',14)
 %% Dark Green Filtering
 % Apply filter
 [BW,DGreen] = Montage_DGreen2(lego);
@@ -61,13 +66,18 @@ title('Post Thresholding BW')
 
 % Take largest block (no conflicts)
 BW3 = bwareafilt(BW,1);
-figure
+figure                                                                                                                                                                                                                                                                                                                                          
 imshow(BW3)
 title('Show largest Region')
 
 % Details on the final block
-regions_DGreen = regionprops(BW3, 'Centroid', 'Area');
+regions_DGreen = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
+%Create bounding box
+box = regions_DGreen.BoundingBox;
+rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+string = 'Dark Green';
+text(box(1),box(2)+100,string,'Color','White','FontSize',14)
 %% Red Filtering
 % Apply filter
 [BW,Red] = Montage_Red(lego);
@@ -92,8 +102,13 @@ imshow(BW3)
 title('Show largest Region')
 
 % Details on the final block
-regions_Red = regionprops(BW3, 'Centroid', 'Area');
+regions_Red = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
+%Create bounding box
+box = regions_Red.BoundingBox;
+rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+string = 'Red';
+text(box(1),box(2)+100,string,'Color','White','FontSize',14)
 %% Light Green Filtering
 % Apply filter
 [BW,LGreen] = Montage_LGreen2(lego);
@@ -118,8 +133,13 @@ imshow(BW3)
 title('Show largest Region')
 
 % Details on the final block
-regions_Lgreen = regionprops(BW3, 'Centroid', 'Area');
+regions_Lgreen = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
 
+%Create bounding box
+box = regions_Lgreen.BoundingBox;
+rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+string = 'Light Green';
+text(box(1),box(2)+100,string,'Color','White','FontSize',14)
 %% Yellow Filtering
 % Apply filter
 [BW,Yellow] = Montage_Yellow1(lego);
@@ -146,10 +166,9 @@ title('Show largest Region')
 % Details on the final block
 regions_Yellow = regionprops(BW3, 'Centroid', 'Area','BoundingBox');
 
+%Create bounding box
 box = regions_Yellow.BoundingBox;
-
-% rectangle [x y w h] 
 rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-string = 'color';
+string = 'Yellow';
 text(box(1),box(2)+100,string,'Color','White','FontSize',14)
 
