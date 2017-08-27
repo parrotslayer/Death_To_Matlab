@@ -2,6 +2,10 @@ clc
 clear all
 close all
 
+%Load validation data
+load('legobrick_validation.mat')
+load('legobrickjoined_validation.mat')
+
 % Load the image
 %lego = imread('legomontage3.png');
 lego_num = ['001';'002';'003';'004';'005';'006';'007';'008';'009';'010';...
@@ -9,7 +13,8 @@ lego_num = ['001';'002';'003';'004';'005';'006';'007';'008';'009';'010';...
 %choose the image to display
 N = 1;
 
-for N = 1:17
+%% Begin looping for all images
+for N = 1:1
 
 filename = ['legobricks',lego_num(N,:),'.jpg'];
 lego = imread(filename);
@@ -255,4 +260,33 @@ if N > 0
     
 end
 
+%% validation of data
+%get validation data from struct for the specific image
+Check_Colour = 0;
+Check_Colour = validation_data(N).colours;
+Check_Center = validation_data(N).center;
+Check_Box = 0;
+Check_Box = validation_data(N).box_size;
+
+%counters
+Yes_Colour = 0;
+
+[trueblocks,Donald] = size(Check_Center);
+%loop for each block
+for i = 1:trueblocks
+    %check if we have the right colors
+    if strcmp(Check_Colour{i},'red') && All_boxes(1,1) ~= 0
+        Yes_Colour = Yes_Colour + 1;
+    elseif strcmp(Check_Colour{i},'darkgreen') && All_boxes(2,1) ~= 0
+        Yes_Colour = Yes_Colour + 1;
+    elseif strcmp(Check_Colour{i},'blue') && All_boxes(3,1) ~= 0
+        Yes_Colour = Yes_Colour + 1;
+    elseif strcmp(Check_Colour{i},'lightgreen') && All_boxes(4,1) ~= 0
+        Yes_Colour = Yes_Colour + 1;
+    elseif strcmp(Check_Colour{i},'yellow') && All_boxes(5,1) ~= 0
+        Yes_Colour = Yes_Colour + 1;    
+    elseif strcmp(Check_Colour{i},'orange') && All_boxes(6,1) ~= 0
+        Yes_Colour = Yes_Colour + 1;
+    end
+end
 end
