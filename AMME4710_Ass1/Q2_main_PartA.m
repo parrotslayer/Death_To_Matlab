@@ -23,7 +23,7 @@ False_Neg = zeros(17,1);
 False_Pos = zeros(17,1);
 
 %% Begin looping for all images
-for I = 1:17
+for I = 14:14
 
 filename = ['legobricks',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -114,10 +114,6 @@ end
 min = 400;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
-% 
-% figure
-% imshow(Blue)
-% regionsos = regionprops(BW, 'Centroid', 'Area', 'BoundingBox')
 
 % Take largest block, high confidence only wanted block is there
 BW3 = bwareafilt(BW2,1);
@@ -235,9 +231,8 @@ min = 500;
 max = 20000;
 BW2 = bwareafilt(BW,[min,max]);
 
-%  figure
-%  imshow(BW2)
-%  regionsos = regionprops(BW, 'Centroid', 'Area', 'BoundingBox')
+figure
+imshow(BW2)
 
 % Details on the multiple block
 regions_Orange = regionprops(BW2, 'Centroid', 'Area','BoundingBox');

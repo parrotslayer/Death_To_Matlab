@@ -9,7 +9,7 @@ load('legobrickjoined_validation.mat')
 % Load the image
 %lego = imread('legomontage3.png');
 lego_num = ['001';'002';'003';'004';'005';'006';'007';'008';'009';'010';...
-    '011';'012';'013';'014';'015';'016';'017'];
+    '011';'012';'013';'014';'015'];
 %choose the image to display
 I = 1;
 
@@ -17,21 +17,24 @@ I = 1;
 Yes_Colour = zeros(17,6);
 Yes_Center = zeros(17,6);
 Yes_Box = zeros(17,6);
-True_Pos = zeros(17,6);
+True_Pos = 0;
 True_Pos_Col = zeros(17,6);
 False_Neg = zeros(17,1);
 False_Pos = zeros(17,1);
+Joined_Centers = zeros(2,2);
+Joined_Boxes = zeros(2,4);
+foundboxes = 0;
 
 %% Begin looping for all images
-for I = 1:1
+for I = 1:15
 
-filename = ['legobricks',lego_num(I,:),'.jpg'];
+filename = ['bricksjoined',lego_num(I,:),'.jpg'];
 lego = imread(filename);
 
 %Preallocate arrays
 % Red, Dark Green, Blue, Light Green, Yellow, Orange
-All_centroids = NaN(6,2);
-All_boxes = zeros(6,4);
+All_centroids = NaN(6,2,3);
+All_boxes = zeros(6,4,3);
 
 figure
 imshow(lego)
@@ -44,33 +47,24 @@ drawbox = 0;
 [BW,Red] = Montage_Red(lego);
 
 %thresholds
-min = 500;
-max = 20000;
-BW2 = bwareafilt(BW,[min,max]);
-
-% Take largest block (no conflicts)
-BW3 = bwareafilt(BW2,1);
+min_thresh = 500;
+max_thresh = 10000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
-regions_Red = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
+regions_Red = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
 
-%check if there is a red block detected
+%check if there is a light green block detected
 [N,trump] = size(regions_Red);
 if N > 0
-    
-    %Store information in arrays
-    centroid = regions_Red.Centroid;
-    All_centroids(1,:) = centroid;     
-    box = regions_Red.BoundingBox;
-    All_boxes(1,:) = box; 
-    
-    %Create bounding box
-    rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-    string = 'Red';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-    
-    %count number of boxes drawn
-    drawbox = drawbox+1;
+    %do for each detected block
+    for k = 1:N  
+        %Store information in arrays
+        centroid = regions_Red(k).Centroid;
+        All_centroids(1,:,k) = centroid;     
+        box = regions_Red(k).BoundingBox;
+        All_boxes(1,:,k) = box; 
+    end
 end
 
 %% Dark Green Filtering
@@ -78,32 +72,24 @@ end
 [BW,DGreen] = Montage_DGreen2(lego);
 
 %thresholds
-min = 400;
-max = 20000;
-BW2 = bwareafilt(BW,[min,max]);
-
-% Take largest block (no conflicts)
-BW3 = bwareafilt(BW2,1);
+min_thresh = 500;
+max_thresh = 10000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
-regions_DGreen = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
+regions_DGreen = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
 
-%check if there is a dark green block detected
+%check if there is a light green block detected
 [N,trump] = size(regions_DGreen);
 if N > 0
-    
-    %Store information in arrays
-    centroid = regions_DGreen.Centroid;
-    All_centroids(2,:) = centroid;     
-    box = regions_DGreen.BoundingBox;
-    All_boxes(2,:) = box; 
-    
-    %Create bounding box
-    rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-    string = 'Dark Green';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-    %count number of boxes drawn
-    drawbox = drawbox+1;
+    %do for each detected block
+    for k = 1:N  
+        %Store information in arrays
+        centroid = regions_DGreen(k).Centroid;
+        All_centroids(2,:,k) = centroid;     
+        box = regions_DGreen(k).BoundingBox;
+        All_boxes(2,:,k) = box; 
+    end
 end
 
 %% Blue Filtering
@@ -111,119 +97,76 @@ end
 [BW,Blue] = Montage_Blue(lego);
 
 %thresholds
-min = 400;
-max = 20000;
-BW2 = bwareafilt(BW,[min,max]);
-% 
-% figure
-% imshow(Blue)
-% regionsos = regionprops(BW, 'Centroid', 'Area', 'BoundingBox')
+min_thresh = 500;
+max_thresh = 10000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
-% Take largest block, high confidence only wanted block is there
-BW3 = bwareafilt(BW2,1);
-
+%imshow(BW)
 % Details on the final block
-regions_Blue = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
+regions_Blue = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
 
-%check if there is a blue block detected
+%check if there is a light green block detected
 [N,trump] = size(regions_Blue);
 if N > 0
-    
-    %Store information in arrays
-    centroid = regions_Blue.Centroid;
-    All_centroids(3,:) = centroid;     
-    box = regions_Blue.BoundingBox;
-    All_boxes(3,:) = box; 
-    
-    %Create bounding box
-    rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-    string = 'Blue';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-    %count number of boxes drawn
-    drawbox = drawbox+1;
+    %do for each detected block
+    for k = 1:N  
+        %Store information in arrays
+        centroid = regions_Blue(k).Centroid;
+        All_centroids(3,:,k) = centroid;     
+        box = regions_Blue(k).BoundingBox;
+        All_boxes(3,:,k) = box; 
+    end
 end
-
 
 %% Light Green Filtering
 % Apply filter
 [BW,LGreen] = Montage_LGreen2(lego);
 
 %thresholds
-min = 500;
-max = 20000;
-BW2 = bwareafilt(BW,[min,max]);
-
-% Take largest block (no conflicts)
-BW3 = bwareafilt(BW2,1);
+min_thresh = 500;
+max_thresh = 10000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
+%imshow(BW2)
 
 % Details on the final block
-regions_LGreen = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
+regions_LGreen = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
 
 %check if there is a light green block detected
 [N,trump] = size(regions_LGreen);
 if N > 0
-    
-    %Store information in arrays
-    centroid = regions_LGreen.Centroid;
-    All_centroids(4,:) = centroid;     
-    box = regions_LGreen.BoundingBox;
-    All_boxes(4,:) = box; 
-    
-    %Create bounding box
-    rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-    string = 'Light Green';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-    %count number of boxes drawn
-    drawbox = drawbox+1;
+    %do for each detected block
+    for k = 1:N  
+        %Store information in arrays
+        centroid = regions_LGreen(k).Centroid;
+        All_centroids(4,:,k) = centroid;     
+        box = regions_LGreen(k).BoundingBox;
+        All_boxes(4,:,k) = box; 
+    end
 end
 
 %% Yellow Filtering
 % Apply filter
 [BW,Yellow] = Montage_Yellow1(lego);
-%[BW,Yellow] = Montage_Yellow(lego);
+
 %thresholds
-min = 500;
-max = 20000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 10000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
-% Details on the multiple block
-regions_Yellow = regionprops(BW2, 'Centroid', 'Area','BoundingBox');
+% Details on the final block
+regions_Yellow = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
 
-%check if there is a yellow block detected
+%check if there is a light green block detected
 [N,trump] = size(regions_Yellow);
 if N > 0
-    
-    for i = 1:N   
-        % Find overlapping areas;
-        box = regions_Yellow(i).BoundingBox;   
-        overlap = 0;
-        for k = 1:6
-            % find area of overlapping bounding boxes
-            area = 0;
-            area = rectint(All_boxes(k,:),box);
-            %check if any bounding boxes overlap (not with itself)
-            if area > 1 && k ~= 5
-                disp('Overlap Found')
-                overlap = overlap + 1;
-                break
-            end
-        end        
+    %do for each detected block
+    for k = 1:N  
+        %Store information in arrays
+        centroid = regions_Yellow(k).Centroid;
+        All_centroids(5,:,k) = centroid;     
+        box = regions_Yellow(k).BoundingBox;
+        All_boxes(5,:,k) = box; 
     end
-    
-    % dont make bounding box if overlap?
-    if overlap < 1 
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Yellow';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        % store data in array
-        All_boxes(5,:) = box;
-        All_centroids(5,:) = regions_Yellow(i).Centroid;
-        %count number of boxes drawn
-        drawbox = drawbox+1;
-
-    end
-    
 end
 
 %% Orange Filtering
@@ -231,66 +174,98 @@ end
 [BW,Orange] = MontageOrange(lego);
 
 %thresholds
-min = 500;
-max = 20000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 10000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
-%  figure
-%  imshow(BW2)
-%  regionsos = regionprops(BW, 'Centroid', 'Area', 'BoundingBox')
+% Details on the final block
+regions_Orange = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
 
-% Details on the multiple block
-regions_Orange = regionprops(BW2, 'Centroid', 'Area','BoundingBox');
-
-%check if there is a yellow block detected
+%check if there is a light green block detected
 [N,trump] = size(regions_Orange);
 if N > 0
-    
-    for i = 1:N   
-        % Find overlapping areas;
-        box = regions_Orange(i).BoundingBox;   
-        overlap = 0;
-        %check the bounding box against all other boxes
-        for k = 1:6
-            % find area of overlapping bounding boxes
-            area = 0;
-            area = rectint(All_boxes(k,:),box);
-            %check if any bounding boxes overlap (not with itself)
-            if area > 1 && k ~= 6
-                disp('Overlap Found')
-                overlap = overlap + 1;
-                break
-            end
-        end
-        %if passes check is an ok box
-        if overlap < 1
-            break;
-        end
+    %do for each detected block
+    for k = 1:N  
+        %Store information in arrays
+        centroid = regions_Orange(k).Centroid;
+        All_centroids(6,:,k) = centroid;     
+        box = regions_Orange(k).BoundingBox;
+        All_boxes(6,:,k) = box; 
     end
-    
-    % dont make bounding box if overlap?
-    if overlap < 1 
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Orange';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        % store data in array
-        All_boxes(6,:) = box;
-        All_centroids(6,:) = regions_Orange(i).Centroid;
-        %count number of boxes drawn
-        drawbox = drawbox+1;
-
-    end
-    
 end
 
-%% validation of data
+%% Check for adjactent blocks
+[gimme,sleep,J] = size(All_boxes);
+
+% i indexes the dark green
+plotbox = zeros(1,4);
+ind = 0;
+for i = 1:J
+    %k indexes yellow
+    for k = 1:J
+        %check area of dark green box vs light green boxes
+        area = rectint(All_boxes(2,:,i),All_boxes(5,:,k));
+        if area > 0 
+            %Store two centroids of joined blocks
+            center_av(1) = (All_centroids(2,1,i)+All_centroids(5,1,k))/2;
+            center_av(2) = (All_centroids(2,2,i)+All_centroids(5,2,k))/2;
+
+            distance = sqrt( (All_centroids(2,1,i)-All_centroids(5,1,k))^2 + (All_centroids(2,2,i)-All_centroids(5,2,k))^2  );
+            
+            % Find the quadrant we are in. Lgreen wrt Dgreen
+            deltaX = All_centroids(5,1,k) - All_centroids(2,1,i);
+            deltaY = -(All_centroids(5,2,k) - All_centroids(2,2,i));
+            % atan2 is messy because of the image axis being flipped
+            angle = abs(tan(deltaY/deltaX));
+            
+            ind = ind + 1;
+            plotbox(ind,1) = center_av(1) - 3*distance;
+            plotbox(ind,2) = center_av(2) - 3*distance;
+            plotbox(ind,3) = 6*distance+distance;
+            plotbox(ind,4) = 6*distance+distance;
+
+        end
+    end    
+end
+
+%check if good block size
+threshU = 400;
+threshL = 150;
+check = 0;
+[num_boxes,killme] = size(plotbox);
+if num_boxes > 1
+    for f = 1:num_boxes
+        %check if the box is of resonable size
+        if plotbox(f,3) > threshL && plotbox(f,3) < threshU
+            ind = f;
+            check = 1;
+        end
+    end
+% only 1 box, plot the only one    
+else
+    ind = 1;
+    check = 1;
+end
+%Create bounding box
+if check == 1
+
+    rectangle('Position',[plotbox(ind,1)+3*distance,plotbox(ind,2)+3*distance,5,5],'LineWidth',5,'EdgeColor','blue');
+    string = 'Lego Bricks Center';
+    text(plotbox(ind,1)+3*distance,plotbox(ind,2)+3*distance-20,string,'Color','White','FontSize',14)
+
+    rectangle('Position',[plotbox(ind,1),plotbox(ind,2),plotbox(ind,3),plotbox(ind,4)],'LineWidth',2,'EdgeColor','red');
+    string = 'Lego Bricks Big Bad Box';
+    text(plotbox(ind,1),plotbox(ind,2)-20,string,'Color','White','FontSize',14)
+    foundboxes = foundboxes + 1;
+end
+
+%% Validation of data
 %get validation data from struct for the specific image
 Check_Colour = 0;
-Check_Colour = validation_data(I).colours;
-Check_Center = validation_data(I).center;
+Check_Colour = validation_data_joined(I).colours;
+Check_Center = validation_data_joined(I).center;
 Check_Box = 0;
-Check_Box = validation_data(I).box_size;
+Check_Box = validation_data_joined(I).box_size;
 
 [trueblocks,Donald] = size(Check_Center);
 %% Check if there is a True Block
@@ -545,23 +520,9 @@ end
 end
 
 %% print out stats
-%counters
-% Yes_Colour = zeros(17,6);
-% Yes_Center = zeros(17,6);
-% Yes_Box = zeros(17,6);
-% True_Pos = zeros(17,6);
-% True_Pos_Col = zeros(17,6);
-% False_Neg = zeros(17,1);
-% False_Pos = zeros(17,1);
 
-truepos = sum(sum(True_Pos))/17/6*100;
-disp(['True Positives = ', num2str(truepos),' %'])
+truepos = foundboxes/15*100;
+disp(['Found Boxes = ', num2str(truepos),' %'])
 
-trueposcol = sum(sum(True_Pos_Col))/17/6*100;
-disp(['True Positives But Colour Wrong= ', num2str(trueposcol),' %'])
-
-falsepos = sum(sum(False_Pos))/17/6*100;
-disp(['True Positives = ', num2str(falsepos),' %'])
-
-falseneg = sum(sum(False_Neg))/17/6*100;
-disp(['True Positives = ', num2str(falseneg),' %'])
+leftovers = 100 - truepos;
+disp(['Not found blocks feelsbadman :spoon = ', num2str(leftovers),' %'])
