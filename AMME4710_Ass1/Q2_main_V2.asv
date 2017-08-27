@@ -23,7 +23,7 @@ False_Neg = zeros(17,1);
 False_Pos = zeros(17,1);
 
 %% Begin looping for all images
-for I = 14:14
+for I = 16:16
 
 filename = ['legobricks',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -68,7 +68,9 @@ if N > 0
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Red';
     text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-    drawbox = drawbo
+    
+    %count number of boxes drawn
+    drawbox = drawbox+1;
 end
 
 %% Dark Green Filtering
@@ -100,6 +102,8 @@ if N > 0
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Dark Green';
     text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    %count number of boxes drawn
+    drawbox = drawbox+1;
 end
 
 %% Blue Filtering
@@ -135,6 +139,8 @@ if N > 0
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Blue';
     text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    %count number of boxes drawn
+    drawbox = drawbox+1;
 end
 
 
@@ -167,6 +173,8 @@ if N > 0
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Light Green';
     text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    %count number of boxes drawn
+    drawbox = drawbox+1;
 end
 
 %% Yellow Filtering
@@ -211,6 +219,8 @@ if N > 0
         % store data in array
         All_boxes(5,:) = box;
         All_centroids(5,:) = regions_Yellow(i).Centroid;
+        %count number of boxes drawn
+        drawbox = drawbox+1;
 
     end
     
@@ -267,6 +277,8 @@ if N > 0
         % store data in array
         All_boxes(6,:) = box;
         All_centroids(6,:) = regions_Orange(i).Centroid;
+        %count number of boxes drawn
+        drawbox = drawbox+1;
 
     end
     
@@ -406,14 +418,36 @@ if sum(Yes_Colour(I,:)) < trueblocks
     False_Neg(I) = (trueblocks - sum(Yes_Colour(I,:)));
 end
 %Check to see if too many bricks detected
-if sum(Yes_Colour(I,:)) > trueblocks
+if drawbox > trueblocks
     %add number of fake blocks to the counter
-    False_Pos(I) = (trueblocks + sum(Yes_Colour(I,:)));    
+    False_Pos(I) = drawbox - sum(Yes_Colour(I,:));    
 end
 %% Check if Wrong Colour
-for i = 1:6
-    %Check if center correct
+
+        %see if we detected any matching colours
+        if strcmp(Check_Colour{k},'red') && All_boxes(1,1) ~= 0 ||...
+                strcmp(Check_Colour{k},'darkgreen') && All_boxes(1,2) ~= 0  ||...
+                strcmp(Check_Colour{k},'blue') && All_boxes(1,3) ~= 0  ||...
+                strcmp(Check_Colour{k},'lightgreen') && All_boxes(1,4) ~= 0  ||...
+                strcmp(Check_Colour{k},'yellow') && All_boxes(1,5) ~= 0  ||...
+                strcmp(Check_Colour{k},'orange') && All_boxes(1,6) ~= 0  ||...
+                %nice we got a block correct colour
+        else
+            %detected true falses
+            True_Pos_Col(I) = True_Pos_Col(I)+ 1;
+        end
+
+%check for each colour
+for k = 1:6
+    if strcmp(Check_Colour{k},'red')
+        for j = 1:6
+           %check if any center positions match
+           
+           %check if the colour index is correct
+        end
+        
+    end
     
-    %if no center then this brick is a false positive
-end
+
+
 end

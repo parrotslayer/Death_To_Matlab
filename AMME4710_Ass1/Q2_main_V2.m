@@ -423,9 +423,44 @@ if drawbox > trueblocks
     False_Pos(I) = drawbox - sum(Yes_Colour(I,:));    
 end
 %% Check if Wrong Colour
-for i = 1:6
-    %Check if center correct
+%check for each colour
+for k = 1:trueblocks
+    if strcmp(Check_Colour{k},'red')
+        %loop for all blocks
+        for j = 1:6
+            %check if any center positions match
+            if Check_Center(k,1) - 50 < All_centroids(j,1) &&...
+                    Check_Center(k,1) + 50 > All_centroids(j,1) &&...
+                    Check_Center(k,2) - 50 < All_centroids(j,2) &&...
+                    Check_Center(k,2) + 50 > All_centroids(j,2)
+                %now check if the index is correct
+                if j ~= 1
+                    %increment counter 
+                    True_Pos_Col(I) = True_Pos_Col(I) + 1;
+                end
+            end  
+        end
+    end
     
-    %if no center then this brick is a false positive
+if strcmp(Check_Colour{k},'orange')
+    %loop for all blocks
+    for j = 1:6
+        %check if any center positions match
+        if Check_Center(k,1) - 50 < All_centroids(j,1) &&...
+                Check_Center(k,1) + 50 > All_centroids(j,1) &&...
+                Check_Center(k,2) - 50 < All_centroids(j,2) &&...
+                Check_Center(k,2) + 50 > All_centroids(j,2)
+            %now check if the index is correct
+            if j ~= 6
+                %increment counter
+                True_Pos_Col(I) = True_Pos_Col(I) + 1;
+            end
+        end
+    end
 end
+    
+end
+    
+%repeat for each colour
+
 end
