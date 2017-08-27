@@ -25,7 +25,7 @@ Joined_Centers = zeros(2,2);
 Joined_Boxes = zeros(2,4);
 
 %% Begin looping for all images
-for I = 1:1
+for I = 8:8
 
 filename = ['bricksjoined',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -236,8 +236,9 @@ if N > 0
 end
 
 %% Check for adjactent blocks
-% Check for Dark Green and Light Green
 [gimme,sleep,J] = size(All_boxes);
+
+% Check for Dark Green with Light Green
 for i = 1:J
     for k = 1:J
         %check area of dark green box vs light green boxes
@@ -245,14 +246,30 @@ for i = 1:J
         if area > 0
             %Store two centroids of joined blocks
             Joined_Centers(1,:) = All_centroids(2,:,i);
-            Joined_Box(1,:) = All_boxes(2,:,i);
+            Joined_Boxes(1,:) = All_boxes(2,:,i);
             Joined_Centers(2,:) = All_centroids(4,:,i);
-            Joined_Box(2,:) = All_boxes(4,:,i);
+            Joined_Boxes(2,:) = All_boxes(4,:,i);
         end
-        % Check for Dark Green and Yellow
-    end
-    
+    end    
 end
+
+% Check for Dark Green with Yellow
+if sum(sum(Joined_Boxes)) == 0
+    for i = 1:J
+        for k = 1:J
+            %check area of dark green box vs yellow boxes
+            area = rectint(All_boxes(2,:,i),All_boxes(5,:,k));
+            if area > 0
+                %Store two centroids of joined blocks
+                Joined_Centers(1,:) = All_centroids(2,:,i);
+                Joined_Boxes(1,:) = All_boxes(2,:,i);
+                Joined_Centers(2,:) = All_centroids(5,:,i);
+                Joined_Boxes(2,:) = All_boxes(5,:,i);
+            end
+        end
+    end
+end
+
 %% Validation of data
 %get validation data from struct for the specific image
 Check_Colour = 0;

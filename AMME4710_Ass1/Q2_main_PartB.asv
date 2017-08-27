@@ -21,6 +21,8 @@ True_Pos = zeros(17,6);
 True_Pos_Col = zeros(17,6);
 False_Neg = zeros(17,1);
 False_Pos = zeros(17,1);
+Joined_Centers = zeros(2,2);
+Joined_Boxes = zeros(2,4);
 
 %% Begin looping for all images
 for I = 1:1
@@ -234,13 +236,40 @@ if N > 0
 end
 
 %% Check for adjactent blocks
-% Check for Dark Green and Light Green
-for i = 1:6
-    for k = 1:6
-    area = rectint();
-% Check for Dark Green and Yellow
+[gimme,sleep,J] = size(All_boxes);
+
+% Check for Dark Green with Light Green
+for i = 1:J
+    for k = 1:J
+        %check area of dark green box vs light green boxes
+        area = rectint(All_boxes(2,:,i),All_boxes(4,:,k));
+        if area > 0
+            %Store two centroids of joined blocks
+            Joined_Centers(1,:) = All_centroids(2,:,i);
+            Joined_Box(1,:) = All_boxes(2,:,i);
+            Joined_Centers(2,:) = All_centroids(4,:,i);
+            Joined_Box(2,:) = All_boxes(4,:,i);
+        end
+    end    
+end
+
+% Check for Dark Green with Yellow
+if size(size(Joined_Box)) == 0
+    for i = 1:J
+        for k = 1:J
+            %check area of dark green box vs light gre boxes
+            area = rectint(All_boxes(2,:,i),All_boxes(5,:,k));
+            if area > 0
+                %Store two centroids of joined blocks
+                Joined_Centers(1,:) = All_centroids(2,:,i);
+                Joined_Box(1,:) = All_boxes(2,:,i);
+                Joined_Centers(2,:) = All_centroids(4,:,i);
+                Joined_Box(2,:) = All_boxes(4,:,i);
+            end
+        end
     end
 end
+
 %% Validation of data
 %get validation data from struct for the specific image
 Check_Colour = 0;
