@@ -9,7 +9,7 @@ load('legobrickjoined_validation.mat')
 % Load the image
 %lego = imread('legomontage3.png');
 lego_num = ['001';'002';'003';'004';'005';'006';'007';'008';'009';'010';...
-    '011';'012';'013';'014';'015';'016';'017'];
+    '011';'012';'013';'014';'015'];
 %choose the image to display
 I = 1;
 
@@ -23,15 +23,15 @@ False_Neg = zeros(17,1);
 False_Pos = zeros(17,1);
 
 %% Begin looping for all images
-for I = 1:17
+for I = 3:3
 
-filename = ['legobricks',lego_num(I,:),'.jpg'];
+filename = ['bricksjoined',lego_num(I,:),'.jpg'];
 lego = imread(filename);
 
 %Preallocate arrays
 % Red, Dark Green, Blue, Light Green, Yellow, Orange
-All_centroids = NaN(6,2);
-All_boxes = zeros(6,4);
+All_centroids = NaN(6,2,3);
+All_boxes = zeros(6,4,3);
 
 figure
 imshow(lego)
@@ -45,7 +45,7 @@ drawbox = 0;
 
 %thresholds
 min = 500;
-max = 20000;
+max = 6000;
 BW2 = bwareafilt(BW,[min,max]);
 
 % Take largest block (no conflicts)
@@ -79,7 +79,7 @@ end
 
 %thresholds
 min = 400;
-max = 20000;
+max = 6000;
 BW2 = bwareafilt(BW,[min,max]);
 
 % Take largest block (no conflicts)
@@ -112,7 +112,7 @@ end
 
 %thresholds
 min = 400;
-max = 20000;
+max = 6000;
 BW2 = bwareafilt(BW,[min,max]);
 % 
 % figure
@@ -150,31 +150,31 @@ end
 
 %thresholds
 min = 500;
-max = 20000;
+max = 6000;
 BW2 = bwareafilt(BW,[min,max]);
-
-% Take largest block (no conflicts)
-BW3 = bwareafilt(BW2,1);
+%imshow(BW2)
 
 % Details on the final block
-regions_LGreen = regionprops(BW3, 'Centroid', 'Area', 'BoundingBox');
+regions_LGreen = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
 
 %check if there is a light green block detected
 [N,trump] = size(regions_LGreen);
 if N > 0
-    
-    %Store information in arrays
-    centroid = regions_LGreen.Centroid;
-    All_centroids(4,:) = centroid;     
-    box = regions_LGreen.BoundingBox;
-    All_boxes(4,:) = box; 
-    
-    %Create bounding box
-    rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-    string = 'Light Green';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-    %count number of boxes drawn
-    drawbox = drawbox+1;
+    %do for each detected block
+    for k = 1:N  
+        %Store information in arrays
+        centroid = regions_LGreen(k).Centroid;
+        All_centroids(4,:,k) = centroid;     
+        box = regions_LGreen(k).BoundingBox;
+        All_boxes(4,:,k) = box; 
+
+        %Create bounding box
+        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+        string = 'Light Green';
+        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+        %count number of boxes drawn
+        drawbox = drawbox+1;
+    end
 end
 
 %% Yellow Filtering
@@ -183,7 +183,7 @@ end
 %[BW,Yellow] = Montage_Yellow(lego);
 %thresholds
 min = 500;
-max = 20000;
+max = 6000;
 BW2 = bwareafilt(BW,[min,max]);
 
 % Details on the multiple block
@@ -232,7 +232,7 @@ end
 
 %thresholds
 min = 500;
-max = 20000;
+max = 6000;
 BW2 = bwareafilt(BW,[min,max]);
 
 %  figure
