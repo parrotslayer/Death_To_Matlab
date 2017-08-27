@@ -23,7 +23,7 @@ False_Neg = zeros(17,1);
 False_Pos = zeros(17,1);
 
 %% Begin looping for all images
-for I = 14:14
+for I = 1:1
 
 filename = ['legobricks',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -312,7 +312,9 @@ for i = 1:trueblocks
                 Check_Box(i,2) - 50 < All_boxes(1,4) &&...
                 Check_Box(i,2) + 50 > All_boxes(1,4)
             
-            Yes_Box(I,1) = 1;            
+            Yes_Box(I,1) = 1;
+            %All tests passed for true positive
+            True_Pos(I,1) = 1;
         end
         
     elseif strcmp(Check_Colour{i},'darkgreen') && All_boxes(2,1) ~= 0
@@ -331,7 +333,9 @@ for i = 1:trueblocks
                 Check_Box(i,2) - 50 < All_boxes(2,4) &&...
                 Check_Box(i,2) + 50 > All_boxes(2,4)
             
-            Yes_Box(I,2) = 1;            
+            Yes_Box(I,2) = 1;
+            %All tests passed for true positive
+            True_Pos(I,2) = 1;
         end
         
     elseif strcmp(Check_Colour{i},'blue') && All_boxes(3,1) ~= 0
@@ -350,7 +354,9 @@ for i = 1:trueblocks
                 Check_Box(i,2) - 50 < All_boxes(3,4) &&...
                 Check_Box(i,2) + 50 > All_boxes(3,4)
             
-            Yes_Box(I,3) = 1;            
+            Yes_Box(I,3) = 1;
+            %All tests passed for true positive
+            True_Pos(I,3) = 1;
         end
         
     elseif strcmp(Check_Colour{i},'lightgreen') && All_boxes(4,1) ~= 0
@@ -369,7 +375,9 @@ for i = 1:trueblocks
                 Check_Box(i,2) - 50 < All_boxes(4,4) &&...
                 Check_Box(i,2) + 50 > All_boxes(4,4)
             
-            Yes_Box(I,4) = 1;            
+            Yes_Box(I,4) = 1;
+            %All tests passed for true positive
+            True_Pos(I,4) = 1;
         end
         
     elseif strcmp(Check_Colour{i},'yellow') && All_boxes(5,1) ~= 0
@@ -388,7 +396,9 @@ for i = 1:trueblocks
                 Check_Box(i,2) - 50 < All_boxes(5,4) &&...
                 Check_Box(i,2) + 50 > All_boxes(5,4)
             
-            Yes_Box(I,5) = 1;            
+            Yes_Box(I,5) = 1;
+            %All tests passed for true positive
+            True_Pos(I,5) = 1;
         end
         
     elseif strcmp(Check_Colour{i},'orange') && All_boxes(6,1) ~= 0
@@ -407,7 +417,9 @@ for i = 1:trueblocks
                 Check_Box(i,2) - 50 < All_boxes(6,4) &&...
                 Check_Box(i,2) + 50 > All_boxes(6,4)
             
-            Yes_Box(I,6) = 1;            
+            Yes_Box(I,6) = 1;
+            %All tests passed for true positive
+            True_Pos(I,6) = 1;            
         end
     end
 end
@@ -464,3 +476,16 @@ end
 %repeat for each colour
 
 end
+
+%% print out stats
+%counters
+Yes_Colour = zeros(17,6);
+Yes_Center = zeros(17,6);
+Yes_Box = zeros(17,6);
+True_Pos = zeros(17,6);
+True_Pos_Col = zeros(17,6);
+False_Neg = zeros(17,1);
+False_Pos = zeros(17,1);
+
+truepos = sum(sum(True_Pos))/17/6*100;
+disp(['True Positives = ', num2str(truepos),' %'])

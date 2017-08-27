@@ -23,7 +23,7 @@ False_Neg = zeros(17,1);
 False_Pos = zeros(17,1);
 
 %% Begin looping for all images
-for I = 16:16
+for I = 14:14
 
 filename = ['legobricks',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -423,31 +423,56 @@ if drawbox > trueblocks
     False_Pos(I) = drawbox - sum(Yes_Colour(I,:));    
 end
 %% Check if Wrong Colour
-
-        %see if we detected any matching colours
-        if strcmp(Check_Colour{k},'red') && All_boxes(1,1) ~= 0 ||...
-                strcmp(Check_Colour{k},'darkgreen') && All_boxes(1,2) ~= 0  ||...
-                strcmp(Check_Colour{k},'blue') && All_boxes(1,3) ~= 0  ||...
-                strcmp(Check_Colour{k},'lightgreen') && All_boxes(1,4) ~= 0  ||...
-                strcmp(Check_Colour{k},'yellow') && All_boxes(1,5) ~= 0  ||...
-                strcmp(Check_Colour{k},'orange') && All_boxes(1,6) ~= 0  ||...
-                %nice we got a block correct colour
-        else
-            %detected true falses
-            True_Pos_Col(I) = True_Pos_Col(I)+ 1;
-        end
-
 %check for each colour
-for k = 1:6
+for k = 1:trueblocks
     if strcmp(Check_Colour{k},'red')
+        %loop for all blocks
         for j = 1:6
-           %check if any center positions match
-           
-           %check if the colour index is correct
+            %check if any center positions match
+            if Check_Center(k,1) - 50 < All_centroids(j,1) &&...
+                    Check_Center(k,1) + 50 > All_centroids(j,1) &&...
+                    Check_Center(k,2) - 50 < All_centroids(j,2) &&...
+                    Check_Center(k,2) + 50 > All_centroids(j,2)
+                %now check if the index is correct
+                if j ~= 1
+                    %increment counter 
+                    True_Pos_Col(I) = True_Pos_Col(I) + 1;
+                end
+            end  
         end
-        
     end
     
-
+if strcmp(Check_Colour{k},'orange')
+    %loop for all blocks
+    for j = 1:6
+        %check if any center positions match
+        if Check_Center(k,1) - 50 < All_centroids(j,1) &&...
+                Check_Center(k,1) + 50 > All_centroids(j,1) &&...
+                Check_Center(k,2) - 50 < All_centroids(j,2) &&...
+                Check_Center(k,2) + 50 > All_centroids(j,2)
+            %now check if the index is correct
+            if j ~= 6
+                %increment counter
+                True_Pos_Col(I) = True_Pos_Col(I) + 1;
+            end
+        end
+    end
+end
+    
+end
+    
+%repeat for each colour
 
 end
+
+%% print out stats
+%counters
+Yes_Colour = zeros(17,6);
+Yes_Center = zeros(17,6);
+Yes_Box = zeros(17,6);
+True_Pos = zeros(17,6);
+True_Pos_Col = zeros(17,6);
+False_Neg = zeros(17,1);
+False_Pos = zeros(17,1);
+
+disp(['True Positives = ', num2str(i),' %'])
