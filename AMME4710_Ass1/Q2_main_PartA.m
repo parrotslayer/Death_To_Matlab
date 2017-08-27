@@ -257,7 +257,7 @@ if N > 0
             area = rectint(All_boxes(k,:),box);
             %check if any bounding boxes overlap (not with itself)
             if area > 1 && k ~= 6
-                disp('Overlap Found')
+                %disp('Overlap Found')
                 overlap = overlap + 1;
                 break
             end
