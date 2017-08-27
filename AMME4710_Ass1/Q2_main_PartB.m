@@ -25,7 +25,7 @@ Joined_Centers = zeros(2,2);
 Joined_Boxes = zeros(2,4);
 
 %% Begin looping for all images
-for I = 8:8
+for I = 1:1
 
 filename = ['bricksjoined',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -46,9 +46,9 @@ drawbox = 0;
 [BW,Red] = Montage_Red(lego);
 
 %thresholds
-min = 500;
-max = 6000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 2000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
 regions_Red = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
@@ -78,9 +78,9 @@ end
 [BW,DGreen] = Montage_DGreen2(lego);
 
 %thresholds
-min = 500;
-max = 6000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 2000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
 regions_DGreen = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
@@ -110,9 +110,9 @@ end
 [BW,Blue] = Montage_Blue(lego);
 
 %thresholds
-min = 500;
-max = 6000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 2000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 %imshow(BW)
 % Details on the final block
@@ -143,9 +143,9 @@ end
 [BW,LGreen] = Montage_LGreen2(lego);
 
 %thresholds
-min = 500;
-max = 6000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 2000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 %imshow(BW2)
 
 % Details on the final block
@@ -176,9 +176,9 @@ end
 [BW,Yellow] = Montage_Yellow1(lego);
 
 %thresholds
-min = 500;
-max = 6000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 2000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
 regions_Yellow = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
@@ -208,9 +208,9 @@ end
 [BW,Orange] = MontageOrange(lego);
 
 %thresholds
-min = 500;
-max = 6000;
-BW2 = bwareafilt(BW,[min,max]);
+min_thresh = 500;
+max_thresh = 2000;
+BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
 regions_Orange = regionprops(BW2, 'Centroid', 'Area', 'BoundingBox');
@@ -239,16 +239,41 @@ end
 [gimme,sleep,J] = size(All_boxes);
 
 % Check for Dark Green with Light Green
+% i indexes the dark green
 for i = 1:J
+    %k indexes light green 
     for k = 1:J
         %check area of dark green box vs light green boxes
         area = rectint(All_boxes(2,:,i),All_boxes(4,:,k));
-        if area > 0
+        if area > 0 
             %Store two centroids of joined blocks
             Joined_Centers(1,:) = All_centroids(2,:,i);
             Joined_Boxes(1,:) = All_boxes(2,:,i);
             Joined_Centers(2,:) = All_centroids(4,:,i);
             Joined_Boxes(2,:) = All_boxes(4,:,i);
+            
+            %Do maths required for drawing the box
+            % Get maximum width and height of bounding box
+            width = max(Joined_Boxes(:,3));
+            height = max(Joined_Boxes(:,4));
+            % Get center position average of the two blocks?
+            center_average(1) = (Joined_Centers(1,1)+Joined_Centers(2,1))/2;
+            center_average(2) = (Joined_Centers(1,2)+Joined_Centers(2,2))/2;
+            % get angle of rotation of the block (radians)
+            angle = atan2((Joined_Centers(2,2)-Joined_Centers(2,1)),(Joined_Centers(1,2)-Joined_Centers(1,1)));
+            % get distancec between two adjacent blocks
+            distance = pdist([Joined_Centers(:,1),Joined_Centers(:,2)],'euclidean');
+            %perform calcs
+            %box_x = Joined_Centers(1,1) + 2.5*distance*cos(angle);
+            %box_y = Joined_Centers(1,2) + 2.5*distance*sin(angle);
+            %box_w = width + 6*distance*cos(angle);
+            %box_h = height + 6*distance*sin(angle);
+            %Create bounding box
+            rectangle('Position',[Joined_Centers(1,1),Joined_Centers(1,2),100,100],'LineWidth',2,'EdgeColor','b');
+            %rectangle('Position',[box_x,box_y,box_w,box_h],'LineWidth',2,'EdgeColor','b');
+            string = 'Lego Bricks';
+            text(box(1),box(2)+100,string,'Color','Red','FontSize',14)
+            
         end
     end    
 end
@@ -270,6 +295,10 @@ if sum(sum(Joined_Boxes)) == 0
     end
 end
 
+%Create bounding box
+rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+string = 'Lego Bricks';
+text(box(1),box(2)+100,string,'Color','Red','FontSize',14)
 %% Validation of data
 %get validation data from struct for the specific image
 Check_Colour = 0;
