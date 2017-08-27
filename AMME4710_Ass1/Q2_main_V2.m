@@ -155,7 +155,7 @@ end
 %% Yellow Filtering
 % Apply filter
 [BW,Yellow] = Montage_Yellow1(lego);
-
+%[BW,Yellow] = Montage_Yellow(lego);
 %thresholds
 min = 500;
 max = 20000;
@@ -194,6 +194,62 @@ if N > 0
         % store data in array
         All_boxes(5,:) = box;
         All_centroids(5,:) = regions_Yellow(i).Centroid;
+
+    end
+    
+end
+
+%% Orange Filtering
+% Apply filter
+[BW,Orange] = MontageOrange(lego);
+
+%thresholds
+min = 500;
+max = 20000;
+BW2 = bwareafilt(BW,[min,max]);
+
+%  figure
+%  imshow(BW2)
+%  regionsos = regionprops(BW, 'Centroid', 'Area', 'BoundingBox')
+
+% Details on the multiple block
+regions_Orange = regionprops(BW2, 'Centroid', 'Area','BoundingBox');
+
+%check if there is a yellow block detected
+[N,trump] = size(regions_Orange);
+if N > 0
+    
+    for i = 1:N   
+        % Find overlapping areas;
+        box = regions_Orange(i).BoundingBox;   
+        overlap = 0;
+        %check the bounding box against all other boxes
+        for k = 1:6
+            % find area of overlapping bounding boxes
+            area = 0;
+            area = rectint(All_boxes(k,:),box);
+            %check if any bounding boxes overlap (not with itself)
+            if area > 1 && k ~= 6
+                disp('Overlap Found')
+                overlap = overlap + 1;
+                break
+            end
+        end
+        %if passes check is an ok box
+        if overlap < 1
+            break;
+        end
+    end
+    
+    % dont make bounding box if overlap?
+    if overlap < 1 
+        %Create bounding box
+        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
+        string = 'Orange';
+        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+        % store data in array
+        All_boxes(6,:) = box;
+        All_centroids(6,:) = regions_Orange(i).Centroid;
 
     end
     
