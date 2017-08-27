@@ -11,12 +11,16 @@ load('legobrickjoined_validation.mat')
 lego_num = ['001';'002';'003';'004';'005';'006';'007';'008';'009';'010';...
     '011';'012';'013';'014';'015';'016';'017'];
 %choose the image to display
-N = 1;
+I = 1;
+
+%counters
+Yes_Colour = zeros(17,6);
+Yes_Center = zeros(17,6);
 
 %% Begin looping for all images
-for N = 1:1
+for I = 1:1
 
-filename = ['legobricks',lego_num(N,:),'.jpg'];
+filename = ['legobricks',lego_num(I,:),'.jpg'];
 lego = imread(filename);
 
 %Preallocate arrays
@@ -263,30 +267,80 @@ end
 %% validation of data
 %get validation data from struct for the specific image
 Check_Colour = 0;
-Check_Colour = validation_data(N).colours;
-Check_Center = validation_data(N).center;
+Check_Colour = validation_data(I).colours;
+Check_Center = validation_data(I).center;
 Check_Box = 0;
-Check_Box = validation_data(N).box_size;
-
-%counters
-Yes_Colour = 0;
+Check_Box = validation_data(I).box_size;
 
 [trueblocks,Donald] = size(Check_Center);
 %loop for each block
 for i = 1:trueblocks
     %check if we have the right colors
     if strcmp(Check_Colour{i},'red') && All_boxes(1,1) ~= 0
-        Yes_Colour = Yes_Colour + 1;
+        Yes_Colour(I,1) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(1,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(1,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(1,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(1,2)
+            
+            Yes_Center(I,1) = 1;            
+        end
+        
     elseif strcmp(Check_Colour{i},'darkgreen') && All_boxes(2,1) ~= 0
-        Yes_Colour = Yes_Colour + 1;
+        Yes_Colour(I,2) = 1;        
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(2,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(2,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(2,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(2,2)
+            
+            Yes_Center(I,2) = 1;             
+        end
+        
     elseif strcmp(Check_Colour{i},'blue') && All_boxes(3,1) ~= 0
-        Yes_Colour = Yes_Colour + 1;
+        Yes_Colour(I,3) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(3,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(3,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(3,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(3,2)
+            
+            Yes_Center(I,3) = 1;            
+        end
+        
     elseif strcmp(Check_Colour{i},'lightgreen') && All_boxes(4,1) ~= 0
-        Yes_Colour = Yes_Colour + 1;
+        Yes_Colour(I,4) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(4,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(4,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(4,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(4,2)
+            
+            Yes_Center(I,4) = 1;            
+        end
+        
     elseif strcmp(Check_Colour{i},'yellow') && All_boxes(5,1) ~= 0
-        Yes_Colour = Yes_Colour + 1;    
+        Yes_Colour(I,5) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(5,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(5,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(5,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(5,2)
+            
+            Yes_Center(I,5) = 1;            
+        end
+        
     elseif strcmp(Check_Colour{i},'orange') && All_boxes(6,1) ~= 0
-        Yes_Colour = Yes_Colour + 1;
+        Yes_Colour(I,6) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(6,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(6,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(6,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(6,2)
+            
+            Yes_Center(I,6) = 1;           
+        end
     end
 end
 end

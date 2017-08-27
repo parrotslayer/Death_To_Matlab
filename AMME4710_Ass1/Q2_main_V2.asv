@@ -13,6 +13,10 @@ lego_num = ['001';'002';'003';'004';'005';'006';'007';'008';'009';'010';...
 %choose the image to display
 N = 1;
 
+%counters
+Yes_Colour = zeros(17,6);
+Yes_Center = zeros(17,6);
+
 %% Begin looping for all images
 for N = 1:1
 
@@ -221,10 +225,10 @@ BW2 = bwareafilt(BW,[min,max]);
 regions_Orange = regionprops(BW2, 'Centroid', 'Area','BoundingBox');
 
 %check if there is a yellow block detected
-[N,trump] = size(regions_Orange);
-if N > 0
+[blocks,trump] = size(regions_Orange);
+if blocks > 0
     
-    for i = 1:N   
+    for i = 1:   
         % Find overlapping areas;
         box = regions_Orange(i).BoundingBox;   
         overlap = 0;
@@ -268,18 +272,77 @@ Check_Center = validation_data(N).center;
 Check_Box = 0;
 Check_Box = validation_data(N).box_size;
 
-%counters
-Yes_Colour = 0;
+
 
 [trueblocks,Donald] = size(Check_Center);
 %loop for each block
 for i = 1:trueblocks
     %check if we have the right colors
     if strcmp(Check_Colour{i},'red') && All_boxes(1,1) ~= 0
-        Yes_Colour = Yes_Colour + 1;
-    elseif
-
+        Yes_Colour(N,1) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(1,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(1,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(1,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(1,2)
+            
+            Yes_Center(N,1) = 1;            
+        end
         
+    elseif strcmp(Check_Colour{i},'darkgreen') && All_boxes(2,1) ~= 0
+        Yes_Colour(N,2) = 1;        
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(2,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(2,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(2,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(2,2)
+            
+            Yes_Center(N,2) = 1;             
+        end
+        
+    elseif strcmp(Check_Colour{i},'blue') && All_boxes(3,1) ~= 0
+        Yes_Colour(N,1) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(3,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(3,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(3,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(3,2)
+            
+            Yes_Center(N,1) = 1;            
+        end
+        
+    elseif strcmp(Check_Colour{i},'lightgreen') && All_boxes(4,1) ~= 0
+        Yes_Colour(N,1) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(4,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(4,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(4,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(4,2)
+            
+            Yes_Center(N,1) = 1;            
+        end
+        
+    elseif strcmp(Check_Colour{i},'yellow') && All_boxes(5,1) ~= 0
+        Yes_Colour(N,1) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(5,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(5,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(5,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(5,2)
+            
+            Yes_Center(N,1) = 1;            
+        end
+        
+    elseif strcmp(Check_Colour{i},'orange') && All_boxes(6,1) ~= 0
+        Yes_Colour(N,1) = 1;
+        %check centroids
+        if Check_Center(i,1) - 50 < All_centroids(6,1) &&...
+                Check_Center(i,1) + 50 > All_centroids(6,1) &&...
+                Check_Center(i,2) - 50 < All_centroids(6,2) &&...
+                Check_Center(i,2) + 50 > All_centroids(6,2)
+            
+            Yes_Center(N,1) = 1;           
+        end
     end
 end
 end
