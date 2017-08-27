@@ -540,19 +540,9 @@ for k = 1:trueblocks
     
 end
     
-%repeat for each colour
-
 end
 
 %% print out stats
-%counters
-% Yes_Colour = zeros(17,6);
-% Yes_Center = zeros(17,6);
-% Yes_Box = zeros(17,6);
-% True_Pos = zeros(17,6);
-% True_Pos_Col = zeros(17,6);
-% False_Neg = zeros(17,1);
-% False_Pos = zeros(17,1);
 
 truepos = sum(sum(True_Pos))/17/6*100;
 disp(['True Positives = ', num2str(truepos),' %'])
