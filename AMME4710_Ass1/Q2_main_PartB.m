@@ -239,6 +239,7 @@ end
 [gimme,sleep,J] = size(All_boxes);
 
 % Check for Dark Green with Light Green
+
 % i indexes the dark green
 for i = 1:J
     %k indexes light green 
@@ -247,32 +248,14 @@ for i = 1:J
         area = rectint(All_boxes(2,:,i),All_boxes(4,:,k));
         if area > 0 
             %Store two centroids of joined blocks
-            Joined_Centers(1,:) = All_centroids(2,:,i);
-            Joined_Boxes(1,:) = All_boxes(2,:,i);
-            Joined_Centers(2,:) = All_centroids(4,:,i);
-            Joined_Boxes(2,:) = All_boxes(4,:,i);
-            
-            %Do maths required for drawing the box
-            % Get maximum width and height of bounding box
-            width = max(Joined_Boxes(:,3));
-            height = max(Joined_Boxes(:,4));
-            % Get center position average of the two blocks?
-            center_average(1) = (Joined_Centers(1,1)+Joined_Centers(2,1))/2;
-            center_average(2) = (Joined_Centers(1,2)+Joined_Centers(2,2))/2;
-            % get angle of rotation of the block (radians)
-            angle = atan2((Joined_Centers(2,2)-Joined_Centers(2,1)),(Joined_Centers(1,2)-Joined_Centers(1,1)));
-            % get distancec between two adjacent blocks
-            distance = pdist([Joined_Centers(:,1),Joined_Centers(:,2)],'euclidean');
-            %perform calcs
-            %box_x = Joined_Centers(1,1) + 2.5*distance*cos(angle);
-            %box_y = Joined_Centers(1,2) + 2.5*distance*sin(angle);
-            %box_w = width + 6*distance*cos(angle);
-            %box_h = height + 6*distance*sin(angle);
+            center_av(1) = (All_centroids(2,1,i)+All_centroids(4,1,k))/2;
+            center_av(2) = (All_centroids(2,2,i)+All_centroids(4,2,k))/2;
             %Create bounding box
-            rectangle('Position',[Joined_Centers(1,1),Joined_Centers(1,2),100,100],'LineWidth',2,'EdgeColor','b');
-            %rectangle('Position',[box_x,box_y,box_w,box_h],'LineWidth',2,'EdgeColor','b');
+            %rectangle('Position',[All_centroids(4,1,k),All_centroids(4,2,k),5,5],'LineWidth',2,'EdgeColor','b');
+            rectangle('Position',[center_av(1),center_av(2),5,5],'LineWidth',2,'EdgeColor','b');
             string = 'Lego Bricks';
             text(box(1),box(2)+100,string,'Color','Red','FontSize',14)
+            
             
         end
     end    
