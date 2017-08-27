@@ -25,7 +25,7 @@ Joined_Centers = zeros(2,2);
 Joined_Boxes = zeros(2,4);
 
 %% Begin looping for all images
-for I = 1:1
+for I = 4:4
 
 filename = ['bricksjoined',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -47,7 +47,7 @@ drawbox = 0;
 
 %thresholds
 min_thresh = 500;
-max_thresh = 6000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -79,7 +79,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 6000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -111,7 +111,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 6000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 %imshow(BW)
@@ -144,7 +144,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 6000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 %imshow(BW2)
 
@@ -177,7 +177,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 6000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -209,7 +209,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 6000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -239,37 +239,50 @@ end
 [gimme,sleep,J] = size(All_boxes);
 
 % Check for Dark Green with Light Green
+plotbox = 0;
+
+% i indexes the dark green
 for i = 1:J
+    %k indexes light green 
     for k = 1:J
         %check area of dark green box vs light green boxes
         area = rectint(All_boxes(2,:,i),All_boxes(4,:,k));
-        if area > 0
+        if area > 0 
             %Store two centroids of joined blocks
-            Joined_Centers(1,:) = All_centroids(2,:,i);
-            Joined_Boxes(1,:) = All_boxes(2,:,i);
-            Joined_Centers(2,:) = All_centroids(4,:,i);
-            Joined_Boxes(2,:) = All_boxes(4,:,i);
+            center_av(1) = (All_centroids(2,1,i)+All_centroids(4,1,k))/2;
+            center_av(2) = (All_centroids(2,2,i)+All_centroids(4,2,k))/2;
+
+            distance = sqrt( (All_centroids(2,1,i)-All_centroids(4,1,k))^2 + (All_centroids(2,2,i)-All_centroids(4,2,k))^2  );
             
-            %Do maths required for drawing the box
-            % Get maximum width and height of bounding box
-            width = max(Joined_Boxes(:,3));
-            height = max(Joined_Boxes(:,4));
-            % Get center position average of the two blocks?
-            center_average(1) = (Joined_Centers(1,1)+Joined_Centers(2,1))/2;
-            center_average(2) = (Joined_Centers(1,2)+Joined_Centers(2,2))/2;
-            % get angle of rotation of the block (radians)
-            angle = atan2((Joined_Centers(2,2)-Joined_Centers(2,1)),(Joined_Centers(1,2)-Joined_Centers(1,1)));
-            % get distancec between two adjacent blocks
-            distance = pdist([Joined_Centers(:,1),Joined_Centers(:,2)],'euclidean');
-            %perform calcs
-            box_x = Joined_Centers(1,1) + 2.5*distance*cos(angle);
-            box_y = Joined_Centers(1,2) + 2.5*distance*sin(angle);
-            box_w = width + 6*distance*cos(angle);
-            box_h = height + 6*distance*sin(angle);
+            % Find the quadrant we are in. Lgreen wrt Dgreen
+            deltaX = All_centroids(4,1,k) - All_centroids(2,1,i);
+            deltaY = -(All_centroids(4,2,k) - All_centroids(2,2,i));
+            % atan2 is messy because of the image axis being flipped
+            angle = abs(tan(deltaY/deltaX));
+            %quadrant 1
+            if deltaX >= 0 && deltaY >= 0
+                plotbox(1) = center_av(1) - 4*distance;
+                plotbox(2) = center_av(2) - 2*distance;
+                plotbox(3) = 6*distance*cos(angle);
+                plotbox(4) = 6*distance*sin(angle);
+            %quadrant 2
+            elseif deltaX < 0 && deltaY > 0
+                %dgfdf
+            %quadrant 3
+            elseif deltaX < 0 && deltaY < 0
+                %dgfdf
+            %quadrant 4
+            elseif deltaX > 0 && deltaY < 0
+                %dgfdf
+            end
+ 
             %Create bounding box
-            rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-            string = 'Lego Bricks';
-            text(box(1),box(2)+100,string,'Color','Red','FontSize',14)
+            if length(plotbox) > 0
+                rectangle('Position',[plotbox(1),plotbox(2),plotbox(3),plotbox(4)],'LineWidth',2,'EdgeColor','b');
+                %rectangle('Position',[center_av(1),center_av(2),5,5],'LineWidth',2,'EdgeColor','b');
+                string = 'Lego Bricks';
+                text(box(1),box(2)+100,string,'Color','Red','FontSize',14)
+            end
             
         end
     end    

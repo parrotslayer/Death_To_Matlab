@@ -67,7 +67,7 @@ if N > 0
     %Create bounding box
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Red';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    text(box(1),box(2)-20,string,'Color','White','FontSize',14)
     
     %count number of boxes drawn
     drawbox = drawbox+1;
@@ -101,7 +101,7 @@ if N > 0
     %Create bounding box
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Dark Green';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    text(box(1),box(2)- 20,string,'Color','White','FontSize',14)
     %count number of boxes drawn
     drawbox = drawbox+1;
 end
@@ -138,7 +138,7 @@ if N > 0
     %Create bounding box
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Blue';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    text(box(1),box(2)- 20,string,'Color','White','FontSize',14)
     %count number of boxes drawn
     drawbox = drawbox+1;
 end
@@ -172,7 +172,7 @@ if N > 0
     %Create bounding box
     rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
     string = 'Light Green';
-    text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+    text(box(1),box(2)- 20,string,'Color','White','FontSize',14)
     %count number of boxes drawn
     drawbox = drawbox+1;
 end
@@ -215,7 +215,7 @@ if N > 0
         %Create bounding box
         rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
         string = 'Yellow';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+        text(box(1),box(2)- 20,string,'Color','White','FontSize',14)
         % store data in array
         All_boxes(5,:) = box;
         All_centroids(5,:) = regions_Yellow(i).Centroid;
@@ -273,7 +273,7 @@ if N > 0
         %Create bounding box
         rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
         string = 'Orange';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
+        text(box(1),box(2)- 20,string,'Color','White','FontSize',14)
         % store data in array
         All_boxes(6,:) = box;
         All_centroids(6,:) = regions_Orange(i).Centroid;

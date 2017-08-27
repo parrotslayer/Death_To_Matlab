@@ -25,7 +25,7 @@ Joined_Centers = zeros(2,2);
 Joined_Boxes = zeros(2,4);
 
 %% Begin looping for all images
-for I = 1:1
+for I = 1:5
 
 filename = ['bricksjoined',lego_num(I,:),'.jpg'];
 lego = imread(filename);
@@ -47,7 +47,7 @@ drawbox = 0;
 
 %thresholds
 min_thresh = 500;
-max_thresh = 2000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -63,13 +63,6 @@ if N > 0
         All_centroids(1,:,k) = centroid;     
         box = regions_Red(k).BoundingBox;
         All_boxes(1,:,k) = box; 
-
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Red';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        %count number of boxes drawn
-        drawbox = drawbox+1;
     end
 end
 
@@ -79,7 +72,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 2000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -95,13 +88,6 @@ if N > 0
         All_centroids(2,:,k) = centroid;     
         box = regions_DGreen(k).BoundingBox;
         All_boxes(2,:,k) = box; 
-
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Dark Green';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        %count number of boxes drawn
-        drawbox = drawbox+1;
     end
 end
 
@@ -111,7 +97,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 2000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 %imshow(BW)
@@ -128,13 +114,6 @@ if N > 0
         All_centroids(3,:,k) = centroid;     
         box = regions_Blue(k).BoundingBox;
         All_boxes(3,:,k) = box; 
-
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Blue';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        %count number of boxes drawn
-        drawbox = drawbox+1;
     end
 end
 
@@ -144,7 +123,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 2000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 %imshow(BW2)
 
@@ -161,13 +140,6 @@ if N > 0
         All_centroids(4,:,k) = centroid;     
         box = regions_LGreen(k).BoundingBox;
         All_boxes(4,:,k) = box; 
-
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Light Green';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        %count number of boxes drawn
-        drawbox = drawbox+1;
     end
 end
 
@@ -177,7 +149,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 2000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -193,13 +165,6 @@ if N > 0
         All_centroids(5,:,k) = centroid;     
         box = regions_Yellow(k).BoundingBox;
         All_boxes(5,:,k) = box; 
-
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Yellow';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        %count number of boxes drawn
-        drawbox = drawbox+1;
     end
 end
 
@@ -209,7 +174,7 @@ end
 
 %thresholds
 min_thresh = 500;
-max_thresh = 2000;
+max_thresh = 10000;
 BW2 = bwareafilt(BW,[min_thresh,max_thresh]);
 
 % Details on the final block
@@ -225,13 +190,6 @@ if N > 0
         All_centroids(6,:,k) = centroid;     
         box = regions_Orange(k).BoundingBox;
         All_boxes(6,:,k) = box; 
-
-        %Create bounding box
-        rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-        string = 'Orange';
-        text(box(1),box(2)+100,string,'Color','White','FontSize',14)
-        %count number of boxes drawn
-        drawbox = drawbox+1;
     end
 end
 
@@ -239,6 +197,7 @@ end
 [gimme,sleep,J] = size(All_boxes);
 
 % Check for Dark Green with Light Green
+plotbox = 0;
 
 % i indexes the dark green
 for i = 1:J
@@ -250,12 +209,31 @@ for i = 1:J
             %Store two centroids of joined blocks
             center_av(1) = (All_centroids(2,1,i)+All_centroids(4,1,k))/2;
             center_av(2) = (All_centroids(2,2,i)+All_centroids(4,2,k))/2;
-            %Create bounding box
-            %rectangle('Position',[All_centroids(4,1,k),All_centroids(4,2,k),5,5],'LineWidth',2,'EdgeColor','b');
-            rectangle('Position',[center_av(1),center_av(2),5,5],'LineWidth',2,'EdgeColor','b');
-            string = 'Lego Bricks';
-            text(box(1),box(2)+100,string,'Color','Red','FontSize',14)
+
+            distance = sqrt( (All_centroids(2,1,i)-All_centroids(4,1,k))^2 + (All_centroids(2,2,i)-All_centroids(4,2,k))^2  );
             
+            % Find the quadrant we are in. Lgreen wrt Dgreen
+            deltaX = All_centroids(4,1,k) - All_centroids(2,1,i);
+            deltaY = -(All_centroids(4,2,k) - All_centroids(2,2,i));
+            % atan2 is messy because of the image axis being flipped
+            angle = abs(tan(deltaY/deltaX));
+            
+            plotbox(1) = center_av(1) - 3*distance;
+            plotbox(2) = center_av(2) - 3*distance;
+            plotbox(3) = 6*distance+distance;
+            plotbox(4) = 6*distance+distance;
+ 
+            %Create bounding box
+            if length(plotbox) > 1
+                
+                rectangle('Position',[plotbox(1)+3*distance,plotbox(2)+3*distance,5,5],'LineWidth',5,'EdgeColor','blue');
+                string = 'Lego Bricks Center';
+                text(plotbox(1)+3*distance,plotbox(2)+3*distance-20,string,'Color','White','FontSize',14)
+                
+                rectangle('Position',[plotbox(1),plotbox(2),plotbox(3),plotbox(4)],'LineWidth',2,'EdgeColor','red');
+                string = 'Lego Bricks Big Bad Box';
+                text(plotbox(1),plotbox(2)-20,string,'Color','White','FontSize',14)
+            end
             
         end
     end    
@@ -278,10 +256,6 @@ if sum(sum(Joined_Boxes)) == 0
     end
 end
 
-%Create bounding box
-rectangle('Position',[box(1),(box(2)),box(3),box(4)],'LineWidth',2,'EdgeColor','r');
-string = 'Lego Bricks';
-text(box(1),box(2)+100,string,'Color','Red','FontSize',14)
 %% Validation of data
 %get validation data from struct for the specific image
 Check_Colour = 0;
