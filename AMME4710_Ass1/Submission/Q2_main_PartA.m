@@ -216,9 +216,7 @@ if N > 0
         All_centroids(5,:) = regions_Yellow(i).Centroid;
         %count number of boxes drawn
         drawbox = drawbox+1;
-
-    end
-    
+    end    
 end
 
 %% Orange Filtering
