@@ -51,7 +51,7 @@ title('3D reconstution of a face')
 % set first row of p from q
 p2 = p;
 
-% set first row to integral of q - offset
+% set first row to integral of q 
 p2(:,1) = cumsum(q(:,1),2);
 
 %calculate integral
