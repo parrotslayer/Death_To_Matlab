@@ -31,14 +31,16 @@ points2 = detectSURFFeatures(im2,'MetricThreshold',1000);
 
 [descriptors1, points1] = extractFeatures(im1, points1);
 [descriptors2, points2] = extractFeatures(im2, points2);
-[matched_pairs,trump] = matchFeatures(descriptors1, descriptors2);
+% MaxRatio default is 0.6
+[matched_pairs,trump] = matchFeatures(descriptors1, descriptors2,'MaxRatio',0.4);
 points1_matched = points1(matched_pairs(:, 1), :);
 points2_matched = points2(matched_pairs(:, 2), :);
 
 %plot correspondences
 %showMatchedFeatures(im1,im2,points1_matched,points2_matched)
+
 figure
-showMatchedFeatures(im1,im2,points1_matched,points2_matched,'montage','Parent',axes);
+showMatchedFeatures(im1,im2,points1_matched,points2_matched,'Parent',axes);
 
 % first undistort images
 %matchedPoints1 = undistortPoints(points1_matched.Location,stereoParams.CameraParameters1);
@@ -49,8 +51,9 @@ matchedPoints1 = points1_matched;
 matchedPoints2 = points2_matched;
 
 % compute inlier correspondences
+% dist threshold is 0.1 by default
 fRANSAC = estimateFundamentalMatrix(matchedPoints1,...
-    matchedPoints2,'Method','MSAC','NumTrials',5000);
+    matchedPoints2,'Method','MSAC','NumTrials',5000, 'DistanceThreshold', 0.01);
 
 worldPoints = triangulate(matchedPoints1,matchedPoints2,stereoParams);
 

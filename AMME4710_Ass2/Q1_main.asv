@@ -15,20 +15,19 @@ clear filename
 image_L = strcat(images_left_dir, camera_poses.left_images(1));
 image_R = strcat(images_right_dir, camera_poses.right_images(1));
 
-im = imread(image_R{1,1});
+im1 = imread(image_L{1,1});
+im2 = imread(image_R{1,1});
 
-imshow(im)
+% convert to greyscale
+im1 = rgb2gray(im1);
+% the right images are in greyscale for some reason?
+%im2 = rgb2gray(im2);
 
 %% T5Q2 Copy Pasted
 
-im1 = image_L{1,1};
-im2 = image_R{1,1};
-
-%load('stereoParams.mat')
-
 % compute matched set of SURF across 2 images
-points1 = detectSURFFeatures(im1,'MetricThreshold',100,'ROI',[230,260,190,260]);
-points2 = detectSURFFeatures(im2,'MetricThreshold',100,'ROI',[1,1,size(im2,2)/3,size(im2,1)]);
+points1 = detectSURFFeatures(im1,'MetricThreshold',1000);
+points2 = detectSURFFeatures(im2,'MetricThreshold',1000);
 
 [descriptors1, points1] = extractFeatures(im1, points1);
 [descriptors2, points2] = extractFeatures(im2, points2);
@@ -41,26 +40,34 @@ points2_matched = points2(matched_pairs(:, 2), :);
 figure
 showMatchedFeatures(im1,im2,points1_matched,points2_matched,'montage','Parent',axes);
 
+figure
+showMatchedFeatures(im1,im2,points1_matched,points2_matched,'Parent',axes);
+
 % first undistort images
-matchedPoints1 = undistortPoints(points1_matched.Location,stereoParams.CameraParameters1);
-matchedPoints2 = undistortPoints(points2_matched.Location,stereoParams.CameraParameters2);
+%matchedPoints1 = undistortPoints(points1_matched.Location,stereoParams.CameraParameters1);
+%matchedPoints2 = undistortPoints(points2_matched.Location,stereoParams.CameraParameters2);
+
+% dont bother undistorting images because takes too long
+matchedPoints1 = points1_matched;
+matchedPoints2 = points2_matched;
 
 % compute inlier correspondences
 fRANSAC = estimateFundamentalMatrix(matchedPoints1,...
-    matchedPoints2,'Method','MSAC','NumTrials',5000);
+    matchedPoints2,'Method','MSAC','NumTrials',5000, 'DistanceThres');
 
 worldPoints = triangulate(matchedPoints1,matchedPoints2,stereoParams);
 
+%%  plot 
 figure
 plot3(worldPoints(:,1),worldPoints(:,3),-worldPoints(:,2),'.')
 hold on
-cam1 = plotCamera('Location',[0 0 0], 'Orientation', [1,0,0; 0,0,-1; 0,1,0],'size', 200);
+%cam1 = plotCamera('Location',[0 0 0], 'Orientation', [1,0,0; 0,0,-1; 0,1,0],'size', 200);
 axis equal
 xlabel('x')
 ylabel('z')
 zlabel('y')
-ylim([-1000 6000])
-xlim([-4000 4000])
-zlim([-1000, 1000])
+% ylim([-1000 6000])
+% xlim([-4000 4000])
+% zlim([-1000, 1000])
 
 
