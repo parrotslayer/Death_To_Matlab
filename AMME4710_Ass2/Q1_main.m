@@ -12,6 +12,7 @@ images_left_dir = (['assignment2_stereodata',filesep,'images_left',filesep]) ;
 images_right_dir = (['assignment2_stereodata',filesep,'images_right',filesep]) ;
 
 
+%% Loop
 i = 1;
 num_images = 49;
 World_Points = NaN(600,3,num_images);
@@ -96,6 +97,15 @@ title('World Coordinates')
 xlabel('X')
 ylabel('Y')
 zlabel('Z')
-ylim([1000 1010])
-xlim([990 1000])
-zlim([3, 5])
+ylim([1000 1009])
+xlim([994 1000])
+zlim([3.6, 5])
+
+%%
+figure
+surf(X,Y,height_grid)
+
+title('World Coordinates')
+xlabel('X')
+ylabel('Y')
+zlabel('Z')

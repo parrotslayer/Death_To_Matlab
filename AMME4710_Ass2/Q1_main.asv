@@ -12,10 +12,11 @@ images_left_dir = (['assignment2_stereodata',filesep,'images_left',filesep]) ;
 images_right_dir = (['assignment2_stereodata',filesep,'images_right',filesep]) ;
 
 
+%% Loop
 i = 1;
 num_images = 49;
 World_Points = NaN(600,3,num_images);
-for i = 4:4
+for i = 1:49
     clear Cam1_Points
     clear filename
     
@@ -50,8 +51,9 @@ for i = 4:4
     points2_matched = points2(matched_pairs(:, 2), :);
     
     %plot correspondences    
-    figure
-    showMatchedFeatures(im1,im2,points1_matched,points2_matched,'Parent',axes);
+%     figure
+%     showMatchedFeatures(im1,im2,points1_matched,points2_matched,'Parent',axes);
+%     title(['Correspondences for Image: ',num2str(i)])
     
     % first undistort images
     %matchedPoints1 = undistortPoints(points1_matched.Location,stereoParams.CameraParameters1);
@@ -64,7 +66,7 @@ for i = 4:4
     % compute inlier correspondences
     % dist threshold is 0.1 by default
     fRANSAC = estimateFundamentalMatrix(matchedPoints1,...
-        matchedPoints2,'Method','MSAC','NumTrials',5000, 'DistanceThreshold', 0.01);
+        matchedPoints2,'Method','MSAC','NumTrials',5000, 'DistanceThreshold', 0.02);
     
     %triangulate to get point cloud wrt camera 1
     Cam1_Points = triangulate(matchedPoints1,matchedPoints2,stereoParams);
@@ -86,10 +88,23 @@ end
 % zlabel('y')
 
 %% Convert from camera 1 to world coordinates
-
-
 figure
-plot3(World_Points(:,1,i), World_Points(:,2,i), World_Points(:,3,i),'.')
+for i = 1:49
+    plot3(World_Points(:,1,i), World_Points(:,2,i), World_Points(:,3,i),'b.')
+    hold on
+end
+title('World Coordinates')
+xlabel('X')
+ylabel('Y')
+zlabel('Z')
+ylim([1000 1009])
+xlim([994 1000])
+zlim([3.6, 5])
+
+%%
+figure
+surf(X,Y,height_grid)
+
 title('World Coordinates')
 xlabel('X')
 ylabel('Y')
