@@ -132,14 +132,17 @@ for i = 1:length(testSet.Files)
     if label_pred(i) == testSet.Labels(i)
         true_pos = true_pos + 1;
         %increment confusion matrix
-        %conf(label_pred(i)+1,testSet.Labels(i)+1) = conf(label_pred(i)+1,testSet.Labels(i)+1) + 1;
-        %plot incorrect ones
+        i_pred = label2number(char(label_pred(i)));
+        i_true = label2number(char(testSet.Labels(i)));
+        conf(i_pred+1,i_true+1) = conf(i_pred+1,i_true+1) + 1;
     else
         figure
         imshow(testSet.readimage(i))
         title(['P = ',char(label_pred(i)),' T = ',char(testSet.Labels(i))])
         %increment confusion matrix
-        %conf(label_pred(i)+1,testSet.Labels(i)+1) = conf(label_pred(i)+1,testSet.Labels(i)+1) + 1;
+        i_pred = label2number(char(label_pred(i)));
+        i_true = label2number(char(testSet.Labels(i)));
+        conf(i_pred+1,i_true+1) = conf(i_pred+1,i_true+1) + 1;
     end
 end
 
