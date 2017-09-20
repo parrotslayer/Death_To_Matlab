@@ -41,51 +41,55 @@ countEachLabel(imds)
 % Divide data into training and testing set
 [trainingSet, testSet] = splitEachLabel(imds, 0.3, 'randomize');
 
-%% Tute 7
+%% Make the machine learning model or just load it
 % Make the model
-%featureVector = NaN(length(trainingSet.Files),250000);
 
-for i = 1:length(trainingSet.Files)
-    %for i = 1:5
-    %extract features using extractHOG
-    clear image
-    image = trainingSet.readimage(i);
-    [featureVector_HOG,hogVisualization] = extractHOGFeatures(image);
-    %normalise the feature vector
-    featureVector_HOG = featureVector_HOG./max(featureVector_HOG);
-    
-    [rows,cols,pages] = size(image);
-    % Get raw pixel data of colour
-    k = 1;
-    for r = 1:rows
-        for c = 1:cols
-            for p = 1:pages
-                %make 1D array of the colour image
-                featureVector_col(k) = image(r,c,p);
-                k = k + 1;
+make_model = 0;
+
+if make_model == 1
+    for i = 1:length(trainingSet.Files)
+        %for i = 1:5
+        %extract features using extractHOG
+        clear image
+        image = trainingSet.readimage(i);
+        [featureVector_HOG,hogVisualization] = extractHOGFeatures(image);
+        %normalise the feature vector
+        featureVector_HOG = featureVector_HOG./max(featureVector_HOG);
+        
+        [rows,cols,pages] = size(image);
+        % Get raw pixel data of colour
+        k = 1;
+        for r = 1:rows
+            for c = 1:cols
+                for p = 1:pages
+                    %make 1D array of the colour image
+                    featureVector_col(k) = image(r,c,p);
+                    k = k + 1;
+                end
             end
         end
+        
+        %normalise the featureVector and convert to double
+        featureVector_col = double(featureVector_col./max(featureVector_col));
+        
+        % Concatenate the different feature vectors
+        featureVector(i,:) = [featureVector_HOG, featureVector_col];
+        
+        %     figure
+        %     subplot(1,2,1);
+        %     imshow(image);
+        %     subplot(1,2,2);
+        %     plot(hogVisualization);
+        
+        
+        % Train an ECOC multiclass model using the default options. SVM
+        Mdl = fitcecoc(featureVector,trainingSet.Labels);
+        % save the generated model
+        save('Mdl_HOG_col.mat','Mdl');
     end
-    
-    %normalise the featureVector and convert to double
-    featureVector_col = double(featureVector_col./max(featureVector_col));
-    
-    % Concatenate the different feature vectors
-    featureVector(i,:) = [featureVector_HOG, featureVector_col];
-    
-    %convert featureVector to type double because gets angry
-    %disp(i)
-    %     figure
-    %     subplot(1,2,1);
-    %     imshow(image);
-    %     subplot(1,2,2);
-    %     plot(hogVisualization);
+else
+    load('Mdl_HOG_col.mat')
 end
-
-
-% Train an ECOC multiclass model using the default options. SVM
-Mdl = fitcecoc(featureVector,trainingSet.Labels);
-save('Mdl_HOG_col.mat','Mdl');
 
 %% Pass in the testing data
 % take first remaining folds and classify the data
@@ -131,9 +135,9 @@ for i = 1:length(testSet.Files)
         %conf(label_pred(i)+1,testSet.Labels(i)+1) = conf(label_pred(i)+1,testSet.Labels(i)+1) + 1;
         %plot incorrect ones
     else
-        %         figure
-        %         imshow(im_sub2(:,:,i))
-        %         title(['P = ',num2str(label_pred(i)),'  T = ',num2str(labels_sub2(i))])
+        figure
+        imshow(testSet.readimage(i))
+        title(['P = ',char(label_pred(i)),' T = ',char(testSet.Labels(i))])
         %increment confusion matrix
         %conf(label_pred(i)+1,testSet.Labels(i)+1) = conf(label_pred(i)+1,testSet.Labels(i)+1) + 1;
     end
@@ -146,11 +150,9 @@ disp('Psyduck used Confusion Matrix')
 disp(conf)
 
 %% show images
-i = 10;
-for i = 100:110
-    figure
-    imshow(testSet.readimage(i))
-    %title([label_pred(i)])
-    disp(label_pred(i))
-    %disp(testSet.Labels(i))
-end
+% i = 10;
+% for i = 100:110
+%     figure
+%     imshow(testSet.readimage(i))
+%     title(['P = ',char(label_pred(i)),' T = ',char(testSet.Labels(i))])
+% end

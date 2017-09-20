@@ -43,7 +43,7 @@ countEachLabel(imds)
 
 %% Tute 7
 % Make the model
-featureVector = NaN(length(trainingSet.Files),196608);
+%featureVector = NaN(length(trainingSet.Files),250000);
 
 for i = 1:length(trainingSet.Files)
     %for i = 1:5
@@ -74,7 +74,7 @@ for i = 1:length(trainingSet.Files)
     featureVector(i,:) = [featureVector_HOG, featureVector_col];
     
     %convert featureVector to type double because gets angry
-    disp(i)
+    %disp(i)
     %     figure
     %     subplot(1,2,1);
     %     imshow(image);
@@ -85,12 +85,37 @@ end
 
 % Train an ECOC multiclass model using the default options. SVM
 Mdl = fitcecoc(featureVector,trainingSet.Labels);
+save('Mdl_HOG_col.mat','Mdl');
 
 %% Pass in the testing data
 % take first remaining folds and classify the data
 for i = 1:length(testSet.Files)
     %extract features using extractHOG
-    [featureVector2(i,:),hogVisualization] = extractHOGFeatures(testSet.readimage(i));
+    clear image
+    image = testSet.readimage(i);
+    [featureVector_HOG,hogVisualization] = extractHOGFeatures(image);
+    %normalise the feature vector
+    featureVector_HOG = featureVector_HOG./max(featureVector_HOG);
+    
+    [rows,cols,pages] = size(image);
+    % Get raw pixel data of colour
+    k = 1;
+    for r = 1:rows
+        for c = 1:cols
+            for p = 1:pages
+                %make 1D array of the colour image
+                featureVector_col(k) = image(r,c,p);
+                k = k + 1;
+            end
+        end
+    end
+    
+    %normalise the featureVector and convert to double
+    featureVector_col = double(featureVector_col./max(featureVector_col));
+    
+    % Concatenate the different feature vectors
+    featureVector2(i,:) = [featureVector_HOG, featureVector_col];
+    
 end
 
 % Pass features into predict. Returns vector with predicted
@@ -125,7 +150,7 @@ i = 10;
 for i = 100:110
     figure
     imshow(testSet.readimage(i))
-    %title([label_pred(i)])
+    title('P = 'char(label_pred(i)' T = '])
     disp(label_pred(i))
     %disp(testSet.Labels(i))
 end
