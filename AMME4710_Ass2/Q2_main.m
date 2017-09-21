@@ -44,7 +44,7 @@ countEachLabel(imds);
 %% Make the machine learning model or just load it
 % Make the model
 
-make_model = 0;
+make_model = 1;
 
 if make_model == 1
     for i = 1:length(trainingSet.Files)
@@ -68,12 +68,24 @@ if make_model == 1
                 end
             end
         end
-        
         %normalise the featureVector and convert to double
         featureVector_col = double(featureVector_col./max(featureVector_col));
         
+        % Use historgram data over the RGB channels. Could do over HSV if
+        % wanted to.
+        % Repeat for R, G, B channels with X bins each
+        num_bins = 10000;
+        [counts_R,bins] = imhist(image(:,:,1),num_bins);
+        [counts_G,bins] = imhist(image(:,:,2),num_bins);
+        [counts_B,bins] = imhist(image(:,:,3),num_bins);
+        featureVector_Hist = [counts_R',counts_G',counts_B'];
+        
+        %normalise the featureVector along ALL the 3 channels.
+        % Could normalise for each channel seperately?
+        featureVector_Hist = double(featureVector_Hist./max(featureVector_Hist));
+        
         % Concatenate the different feature vectors
-        featureVector(i,:) = [featureVector_HOG, featureVector_col];
+        featureVector(i,:) = [featureVector_HOG, featureVector_col,featureVector_Hist];
         
         %     figure
         %     subplot(1,2,1);
@@ -81,12 +93,11 @@ if make_model == 1
         %     subplot(1,2,2);
         %     plot(hogVisualization);
         
-        
-        % Train an ECOC multiclass model using the default options. SVM
-        Mdl = fitcecoc(featureVector,trainingSet.Labels);
-        % save the generated model
-        save('Mdl_HOG_col.mat','Mdl');
     end
+    % Train an ECOC multiclass model using the default options. SVM
+    Mdl = fitcecoc(featureVector,trainingSet.Labels);
+    % save the generated model
+    save('Mdl_HOG_col_hist.mat','Mdl');
 else
     load('Mdl_HOG_col.mat')
 end
@@ -117,9 +128,22 @@ for i = 1:length(testSet.Files)
     %normalise the featureVector and convert to double
     featureVector_col = double(featureVector_col./max(featureVector_col));
     
-    % Concatenate the different feature vectors
-    featureVector2(i,:) = [featureVector_HOG, featureVector_col];
+    % Use historgram data over the RGB channels. Could do over HSV if
+    % wanted to.
+    % Repeat for R, G, B channels with X bins each
+    num_bins = 10000;
+    [counts_R,bins] = imhist(image(:,:,1),num_bins);
+    [counts_G,bins] = imhist(image(:,:,2),num_bins);
+    [counts_B,bins] = imhist(image(:,:,3),num_bins);
+    featureVector_Hist = [counts_R',counts_G',counts_B'];
     
+    %normalise the featureVector along ALL the 3 channels.
+    % Could normalise for each channel seperately?
+    featureVector_Hist = double(featureVector_Hist./max(featureVector_Hist));
+    
+    % Concatenate the different feature vectors
+    featureVector2(i,:) = [featureVector_HOG, featureVector_col,featureVector_Hist];
+   
 end
 
 % Pass features into predict. Returns vector with predicted
