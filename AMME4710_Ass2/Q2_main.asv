@@ -159,7 +159,7 @@ for i = 1:7
     recall(i) = conf(i,i)/sum(conf(:,1));
 end
 F1 = 2*(precision.*recall)/(precision+recall)*100;
-disp(['F2 Score = ', num2str(F1),' %'])
+disp(['F2 Score = ', num2str(),' %'])
 
 
 
