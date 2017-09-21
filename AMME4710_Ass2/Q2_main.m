@@ -24,7 +24,7 @@ imds = imageDatastore(rootFolder,'IncludeSubfolders',true, 'LabelSource', 'folde
 % associated with each image. The labels are automatically assigned from
 % the folder names of the image files. Use |countEachLabel| to summarize
 % the number of images per category.
-tbl = countEachLabel(imds)
+tbl = countEachLabel(imds);
 %%
 % Because |imds| above contains an unequal number of images per category,
 % let's first adjust it, so that the number of images in the training set
@@ -36,7 +36,7 @@ minSetCount = min(tbl{:,2}); % determine the smallest amount of images in a cate
 imds_train = splitEachLabel(imds, minSetCount, 'randomize');
 
 % Notice that each set now has exactly the same number of images.
-countEachLabel(imds)
+countEachLabel(imds);
 
 % Divide data into training and testing set
 [trainingSet, testSet] = splitEachLabel(imds, 0.3, 'randomize');
@@ -134,15 +134,15 @@ for i = 1:length(testSet.Files)
         %increment confusion matrix
         i_pred = label2number(char(label_pred(i)));
         i_true = label2number(char(testSet.Labels(i)));
-        conf(i_pred+1,i_true+1) = conf(i_pred+1,i_true+1) + 1;
+        conf(i_pred,i_true) = conf(i_pred,i_true) + 1;
     else
-        figure
-        imshow(testSet.readimage(i))
-        title(['P = ',char(label_pred(i)),' T = ',char(testSet.Labels(i))])
+        %figure
+        %imshow(testSet.readimage(i))
+        %title(['P = ',char(label_pred(i)),' T = ',char(testSet.Labels(i))])
         %increment confusion matrix
         i_pred = label2number(char(label_pred(i)));
         i_true = label2number(char(testSet.Labels(i)));
-        conf(i_pred+1,i_true+1) = conf(i_pred+1,i_true+1) + 1;
+        conf(i_pred,i_true) = conf(i_pred,i_true) + 1;
     end
 end
 
