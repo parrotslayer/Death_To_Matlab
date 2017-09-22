@@ -38,8 +38,8 @@ for i = 1:49
     %% T5Q2 Using SURF to match features
     
     % compute matched set of SURF across 2 images
-    points1 = detectSURFFeatures(im1,'MetricThreshold',500);
-    points2 = detectSURFFeatures(im2,'MetricThreshold',500);
+    points1 = detectSURFFeatures(im1,'MetricThreshold',1000);
+    points2 = detectSURFFeatures(im2,'MetricThreshold',1000);
     
     % Extract features out 
     [descriptors1, points1] = extractFeatures(im1, points1);
@@ -47,7 +47,7 @@ for i = 1:49
     
     % Matching features between two images 
     % MaxRatio default is 0.6
-    [matched_pairs,trump] = matchFeatures(descriptors1, descriptors2,'MaxRatio',0.1);
+    [matched_pairs,trump] = matchFeatures(descriptors1, descriptors2,'MaxRatio',0.4);
     points1_matched = points1(matched_pairs(:, 1), :);
     points2_matched = points2(matched_pairs(:, 2), :);
     
@@ -67,7 +67,7 @@ for i = 1:49
     % compute inlier correspondences
     % dist threshold is 0.1 by default
     [F,inliersIndex] = estimateFundamentalMatrix(matchedPoints1,...
-        matchedPoints2,'Method','MSAC','NumTrials',2000, 'DistanceThreshold', 0.02);
+        matchedPoints2,'Method','MSAC','NumTrials',5000, 'DistanceThreshold', 0.03);
         
     %triangulate to get point cloud wrt camera 1
     Cam1_Points = triangulate(matchedPoints1(inliersIndex,:),matchedPoints2(inliersIndex,:),stereoParams);
@@ -96,7 +96,7 @@ end
 %% Convert from camera 1 to world coordinates
 figure
 for i = 1:49
-    scatter3(World_Points(:,1,i), World_Points(:,2,i), -World_Points(:,3,i),3,colors(:,:,i),'.')
+    scatter3(World_Points(:,1,i), World_Points(:,2,i), -World_Points(:,3,i),3,colors(:,:,i))
     hold on
 end
 axis equal
@@ -106,7 +106,7 @@ ylabel('Y')
 zlabel('Z')
 ylim([1000 1009])
 xlim([994 1000])
-zlim([-4.6, -3.5])
+zlim([-5, -2])
 
 %% plot mesh grid
 % figure
