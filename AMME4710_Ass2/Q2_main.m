@@ -173,8 +173,6 @@ end
 %% Show evaluation
 true_pos_rate = true_pos/length(testSet.Files)*100;
 disp(['True Positive Rate = ', num2str(true_pos_rate),' %'])
-disp('Psyduck used Confusion Matrix')
-disp(conf)
 
 for i = 1:7
     %calc precision (across)
@@ -184,7 +182,8 @@ for i = 1:7
 end
 F1 = 2*(precision.*recall)/(precision+recall)*100;
 disp(['F2 Score = ', num2str(F1),' %'])
-
+disp('Confusion Matrix')
+disp(conf)
 
 
 %% show images
