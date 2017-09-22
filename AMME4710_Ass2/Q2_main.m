@@ -39,12 +39,13 @@ imds_train = splitEachLabel(imds, minSetCount, 'randomize');
 countEachLabel(imds);
 
 % Divide data into training and testing set
-[trainingSet, testSet] = splitEachLabel(imds, 0.3, 'randomize');
+fold_ratio = 0.3;
+[trainingSet, testSet] = splitEachLabel(imds, fold_ratio, 'randomize');
 
 %% Make the machine learning model or just load it
 % Make the model
 
-make_model = 1;
+make_model = 0;
 
 if make_model == 1
     for i = 1:length(trainingSet.Files)
@@ -171,6 +172,7 @@ for i = 1:length(testSet.Files)
 end
 
 %% Show evaluation
+disp(['']);
 true_pos_rate = true_pos/length(testSet.Files)*100;
 disp(['True Positive Rate = ', num2str(true_pos_rate),' %'])
 
