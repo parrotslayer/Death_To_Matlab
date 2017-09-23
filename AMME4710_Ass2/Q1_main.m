@@ -7,9 +7,9 @@ load('terrain.mat')
 load('stereo_calib.mat')
 load('camera_pose_data.mat')
 
-%directory of where the images be w.r.t folder path
-images_left_dir = (['assignment2_stereodata',filesep,'images_left',filesep]) ;
-images_right_dir = (['assignment2_stereodata',filesep,'images_right',filesep]) ;
+%directory of where the images stored
+images_left_dir = ('C:\Users\Bill\Documents\GitHub\Death_To_Matlab\AMME4710_Ass2\assignment2_stereodata\images_left') ;
+images_right_dir = ('C:\Users\Bill\Documents\GitHub\Death_To_Matlab\AMME4710_Ass2\assignment2_stereodata\images_right') ;
 
 
 %% Loop
@@ -17,14 +17,14 @@ i = 1;
 num_images = 49;
 %World_Points = NaN(600,3,num_images);
 %colors = NaN(600,3,num_images);
-for i = 14:14
+for i = 1:49
     clear Cam1_Points
     clear filename
     
     disp(['Current Image is Number: ',num2str(i)])
     
-    image_L = strcat(images_left_dir, camera_poses.left_images(i));
-    image_R = strcat(images_right_dir, camera_poses.right_images(i));
+    image_L = strcat(images_left_dir,filesep, camera_poses.left_images(i));
+    image_R = strcat(images_right_dir,filesep, camera_poses.right_images(i));
     
     %images stored in a cell for some reason, want arrays
     im1_color = imread(image_L{1,1});
@@ -61,9 +61,9 @@ for i = 14:14
     points2_matched = points2(matched_pairs(:, 2), :);
     
     %plot correspondences on the undistored image    
-     figure
-     showMatchedFeatures(im1_dist,im2_dist,points1_matched,points2_matched,'Parent',axes);
-     title(['Correspondences for Image: ',num2str(i)])
+%      figure
+%      showMatchedFeatures(im1_dist,im2_dist,points1_matched,points2_matched,'Parent',axes);
+%      title(['Correspondences for Image: ',num2str(i)])
         
 %      figure
 %      showMatchedFeatures(im1,im2,points1_matched,points2_matched,'Parent',axes);
@@ -110,10 +110,10 @@ xlim([994 1000])
 zlim([-5, -3.5])
 
 %% plot mesh grid
-% figure
-% surf(X,Y,height_grid)
-% 
-% title('World Coordinates')
-% xlabel('X')
-% ylabel('Y')
-% zlabel('Z')
+figure
+surf(X,Y,height_grid)
+
+title('3D Mesh Grid')
+xlabel('X')
+ylabel('Y')
+zlabel('Z')
