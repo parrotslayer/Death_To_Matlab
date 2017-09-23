@@ -35,6 +35,10 @@ for i = 1:49
     % the right images are in greyscale for some reason?
     %im2 = rgb2gray(im2);
     
+    %undistort images
+    im1 = undistortImage(im1,stereoParams.CameraParameters1);
+    im2 = undistortImage(im2,stereoParams.CameraParameters2);
+    
     %% T5Q2 Using SURF to match features
     
     % compute matched set of SURF across 2 images
@@ -106,7 +110,7 @@ ylabel('Y')
 zlabel('Z')
 ylim([1000 1009])
 xlim([994 1000])
-zlim([-5, -2])
+%zlim([-5, -3.5])
 
 %% plot mesh grid
 % figure
