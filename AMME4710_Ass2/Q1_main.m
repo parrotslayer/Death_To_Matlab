@@ -17,7 +17,7 @@ i = 1;
 num_images = 49;
 %World_Points = NaN(600,3,num_images);
 %colors = NaN(600,3,num_images);
-for i = 1:49
+for i = 14:14
     clear Cam1_Points
     clear filename
     
@@ -50,8 +50,8 @@ for i = 1:49
     % points2 = detectHarrisFeatures(im2,'MinQuality', 0.01);
     
     % Extract features out 
-    [descriptors1, points1] = extractFeatures(im1, points1);
-    [descriptors2, points2] = extractFeatures(im2, points2);
+    [descriptors1, points1] = extractFeatures(im1, points1,'Upright',false);
+    [descriptors2, points2] = extractFeatures(im2, points2,'Upright',false);
     
     % Matching features between two images 
     % MaxRatio default is 0.6
@@ -61,15 +61,16 @@ for i = 1:49
     points2_matched = points2(matched_pairs(:, 2), :);
     
     %plot correspondences on the undistored image    
-%     figure
-%     showMatchedFeatures(im1_dist,im2_dist,points1_matched,points2_matched,'Parent',axes);
-%     title(['Correspondences for Image: ',num2str(i)])
+     figure
+     showMatchedFeatures(im1_dist,im2_dist,points1_matched,points2_matched,'Parent',axes);
+     title(['Correspondences for Image: ',num2str(i)])
         
 %      figure
 %      showMatchedFeatures(im1,im2,points1_matched,points2_matched,'Parent',axes);
 %      title(['Correspondences for Image : ',num2str(i)])
      
-    % dont bother undistorting images because takes too long
+    % dont bother undistorting points indivudually because takes too long,
+    % just undisort the whole image at the start
     matchedPoints1 = points1_matched;
     matchedPoints2 = points2_matched;
     
@@ -108,3 +109,11 @@ ylim([1000 1009])
 xlim([994 1000])
 zlim([-5, -3.5])
 
+%% plot mesh grid
+% figure
+% surf(X,Y,height_grid)
+% 
+% title('World Coordinates')
+% xlabel('X')
+% ylabel('Y')
+% zlabel('Z')

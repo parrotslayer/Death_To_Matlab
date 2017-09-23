@@ -17,7 +17,7 @@ i = 1;
 num_images = 49;
 %World_Points = NaN(600,3,num_images);
 %colors = NaN(600,3,num_images);
-for i = 1:14
+for i = 1:49
     clear Cam1_Points
     clear filename
     
@@ -56,14 +56,14 @@ for i = 1:14
     % Matching features between two images 
     % MaxRatio default is 0.6
     [matched_pairs,trump] = matchFeatures(descriptors1, descriptors2,...
-        'MaxRatio',0.4,'Unique',true,'Method','Exhaustive','MatchThreshold',1);
+        'MaxRatio',0.4,'Unique',false,'Method','Exhaustive','MatchThreshold',1);
     points1_matched = points1(matched_pairs(:, 1), :);
     points2_matched = points2(matched_pairs(:, 2), :);
     
     %plot correspondences on the undistored image    
-     figure
-     showMatchedFeatures(im1_dist,im2_dist,points1_matched,points2_matched,'Parent',axes);
-     title(['Correspondences for Image: ',num2str(i)])
+%     figure
+%     showMatchedFeatures(im1_dist,im2_dist,points1_matched,points2_matched,'Parent',axes);
+%     title(['Correspondences for Image: ',num2str(i)])
         
 %      figure
 %      showMatchedFeatures(im1,im2,points1_matched,points2_matched,'Parent',axes);
@@ -106,5 +106,13 @@ ylabel('Y')
 zlabel('Z')
 ylim([1000 1009])
 xlim([994 1000])
-zlim([-5, -2])
+zlim([-5, -3.5])
 
+%% plot mesh grid
+% figure
+% surf(X,Y,height_grid)
+% 
+% title('World Coordinates')
+% xlabel('X')
+% ylabel('Y')
+% zlabel('Z')
