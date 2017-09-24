@@ -40,12 +40,16 @@ countEachLabel(imds);
 
 % Divide data into training and testing set
 fold_ratio = 0.3;
+
+
+for fold = 5:5
+    fold_ratio = fold/10;
 [trainingSet, testSet] = splitEachLabel(imds, fold_ratio, 'randomize');
 
 %% Make the machine learning model or just load it
 % Make the model
 
-make_model = 0;
+make_model = 1;
 
 if make_model == 1
     for i = 1:length(trainingSet.Files)
@@ -60,12 +64,19 @@ if make_model == 1
         [rows,cols,pages] = size(image);
         % Get raw pixel data of colour
         k = 1;
+        KS = 0;
         for r = 1:rows
             for c = 1:cols
                 for p = 1:pages
-                    %make 1D array of the colour image
-                    featureVector_col(k) = image(r,c,p);
-                    k = k + 1;
+                    %subsample the image data by a factor KS
+                    if KS == 4
+                        %make 1D array of the colour image
+                        featureVector_col(k) = image(r,c,p);
+                        k = k + 1;
+                        KS = 0;
+                    else
+                        KS = KS + 1;
+                    end                    
                 end
             end
         end
@@ -87,7 +98,13 @@ if make_model == 1
         
         % Concatenate the different feature vectors
         featureVector(i,:) = [featureVector_HOG, featureVector_col,featureVector_Hist];
-        
+        %featureVector(i,:) = [featureVector_HOG];
+        %featureVector(i,:) = [featureVector_col];
+        %featureVector(i,:) = [featureVector_Hist];
+        %featureVector(i,:) = [featureVector_HOG, featureVector_col];
+        %featureVector(i,:) = [featureVector_HOG, featureVector_Hist];
+        %featureVector(i,:) = [featureVector_col,featureVector_Hist];
+
         %     figure
         %     subplot(1,2,1);
         %     imshow(image);
@@ -108,6 +125,8 @@ end
 for i = 1:length(testSet.Files)
     %extract features using extractHOG
     clear image
+    clear featureVector_col
+    clear featureVector_Hist
     image = testSet.readimage(i);
     [featureVector_HOG,hogVisualization] = extractHOGFeatures(image);
     %normalise the feature vector
@@ -116,12 +135,19 @@ for i = 1:length(testSet.Files)
     [rows,cols,pages] = size(image);
     % Get raw pixel data of colour
     k = 1;
+    KS = 0;
     for r = 1:rows
         for c = 1:cols
             for p = 1:pages
-                %make 1D array of the colour image
-                featureVector_col(k) = image(r,c,p);
-                k = k + 1;
+                %subsample the image data by a factor
+                if KS == 4
+                    %make 1D array of the colour image
+                    featureVector_col(k) = image(r,c,p);
+                    k = k + 1;
+                    KS = 0;
+                else
+                    KS = KS + 1;
+                end
             end
         end
     end
@@ -144,7 +170,13 @@ for i = 1:length(testSet.Files)
     
     % Concatenate the different feature vectors
     featureVector2(i,:) = [featureVector_HOG, featureVector_col,featureVector_Hist];
-   
+    %featureVector2(i,:) = [featureVector_HOG];
+    %featureVector2(i,:) = [featureVector_col];
+    %featureVector2(i,:) = [featureVector_Hist];
+    %featureVector2(i,:) = [featureVector_HOG, featureVector_col];
+    %featureVector2(i,:) = [featureVector_HOG, featureVector_Hist];
+    %featureVector2(i,:) = [featureVector_col,featureVector_Hist];
+           
 end
 
 % Pass features into predict. Returns vector with predicted
@@ -172,7 +204,7 @@ for i = 1:length(testSet.Files)
 end
 
 %% Show evaluation
-disp(['']);
+disp(['Fold Ratio = ',num2str(fold_ratio*100),' %']);
 true_pos_rate = true_pos/length(testSet.Files)*100;
 disp(['True Positive Rate = ', num2str(true_pos_rate),' %'])
 
@@ -183,11 +215,15 @@ for i = 1:7
     recall(i) = conf(i,i)/sum(conf(:,1));
 end
 F1 = 2*(precision.*recall)/(precision+recall)*100;
-disp(['F2 Score = ', num2str(F1),' %'])
+disp(['F1 Score = ', num2str(F1),' %'])
 disp('Confusion Matrix')
 disp(conf)
+results = zeros(8);
+results(2:8,1) = precision;
+results(1,2:8) = recall;
+results(2:8,2:8) = conf;
 
-
+end
 %% show images
 % i = 10;
 % for i = 100:110
